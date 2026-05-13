@@ -584,6 +584,31 @@ button { font-family: inherit; cursor: pointer; border: none; }
   .hero-sub { font-size: 15px !important; }
   .sec-title { font-size: clamp(24px, 5vw, 28px) !important; }
 }
+@media (min-width: 681px) and (max-width: 900px) {
+  .steps-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: clamp(14px, 2.5vw, 24px);
+    max-width: none;
+    margin-inline: 0;
+    margin-top: var(--space-5);
+  }
+  .step-wrap:not(:last-child)::after {
+    top: 50%;
+    left: calc(100% + 2px);
+    width: clamp(12px, 2vw, 22px);
+    height: 1px;
+    background: linear-gradient(90deg, var(--gold), rgba(119,90,25,0));
+    transform: translateY(-50%);
+  }
+  .step-wrap:not(:last-child)::before {
+    top: 50%;
+    left: calc(100% + clamp(11px, 1.8vw, 20px));
+    transform: translateY(-50%) rotate(45deg);
+  }
+  .step-card { padding: var(--space-3); }
+  .step-title { font-size: 18px; }
+  .step-desc { font-size: 14px; }
+}
 @media (max-width: 600px) {
   .hero { padding: var(--space-10) 0 var(--space-6) !important; }
   .hero-ctas { flex-direction: column; align-items: center; }
