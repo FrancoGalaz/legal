@@ -10,11 +10,13 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/legal_agent"
     REDIS_URL: str = "redis://localhost:6379/0"
 
+    # LLM config — set OPENAI_API_KEY or OPENROUTER_API_KEY
     OPENAI_API_KEY: str = ""
-    OPENAI_BASE_URL: str = "https://api.openai.com/v1"
-    LLM_MODEL: str = "gpt-4o"
+    OPENROUTER_API_KEY: str = ""
+    OPENAI_BASE_URL: str = "https://openrouter.ai/api/v1"
+    LLM_MODEL: str = "deepseek/deepseek-v4-flash"
 
-    model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
+    model_config = {"env_file": ".env", "env_file_encoding": "utf-8", "extra": "ignore"}
 
 
 settings = Settings()

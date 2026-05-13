@@ -3,6 +3,8 @@ from typing import Optional
 from datetime import datetime
 from enum import Enum
 
+from app.schemas.review_schemas import AnalysisResult
+
 class ReviewStatus(str, Enum):
     PENDING = "pending"
     IN_PROGRESS = "in_progress"
@@ -22,6 +24,7 @@ class ReviewResponse(BaseModel):
     review_type: str
     language: str
     status: str
+    result: Optional[AnalysisResult] = None
     created_at: datetime
 
     model_config = {"from_attributes": True}

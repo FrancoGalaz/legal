@@ -1,5 +1,6 @@
 import uuid
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from app.models.document import Document
 from app.schemas.documents import DocumentCreateRequest, DocumentResponse
 
@@ -20,3 +21,14 @@ class DocumentStore:
         await self.session.commit()
         await self.session.refresh(doc)
         return DocumentResponse.model_validate(doc)
+
+    async def get_by_id(self, document_id: str, tenant_id: str) -> DocumentResponse | None:
+        stmt = select(Document).where(
+            Document.id == document_id,
+            Document.tenant_id == tenant_id
+        )
+        result = await self.session.execute(stmt)
+        doc = result.scalar_one_or_none()
+        if doc:
+            return DocumentResponse.model_validate(doc)
+        return None

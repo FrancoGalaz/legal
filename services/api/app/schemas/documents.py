@@ -13,6 +13,7 @@ class DocumentResponse(BaseModel):
     tenant_id: str
     filename: str
     content_type: str
+    text_content: str
     status: str
     created_at: datetime
 

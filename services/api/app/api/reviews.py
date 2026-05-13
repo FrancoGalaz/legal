@@ -1,18 +1,54 @@
-from fastapi import APIRouter, Depends, HTTPException
+import json
+import logging
+
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.core.db import get_async_session
+
+from app.core.db import get_async_session, SessionLocal
 from app.services.review_store import ReviewStore
+from app.services.document_store import DocumentStore
+from app.services.llm_service import LLMService
 from app.schemas.reviews import ReviewCreateRequest, ReviewResponse
 
 router = APIRouter(prefix="/reviews", tags=["reviews"])
+logger = logging.getLogger(__name__)
+
+
+async def _run_analysis(review_id: str, document_id: str, tenant_id: str) -> None:
+    async with SessionLocal() as session:
+        try:
+            doc_store = DocumentStore(session)
+            document = await doc_store.get_by_id(document_id, tenant_id)
+            if not document:
+                review_store = ReviewStore(session)
+                await review_store.update_status(review_id, tenant_id, "failed")
+                logger.error("Document %s not found for review %s", document_id, review_id)
+                return
+
+            llm = LLMService()
+            result = await llm.analyze_contract(document.text_content or "")
+
+            review_store = ReviewStore(session)
+            await review_store.update_status(review_id, tenant_id, "completed", result)
+        except Exception as exc:
+            logger.exception("Analysis failed for review %s: %s", review_id, exc)
+            try:
+                review_store = ReviewStore(session)
+                await review_store.update_status(review_id, tenant_id, "failed")
+            except Exception:
+                pass
+
 
 @router.post("", response_model=ReviewResponse, status_code=201)
 async def create_review(
     req: ReviewCreateRequest,
+    background_tasks: BackgroundTasks,
     session: AsyncSession = Depends(get_async_session)
 ):
     store = ReviewStore(session)
-    return await store.create(req)
+    review = await store.create(req)
+    background_tasks.add_task(_run_analysis, review.id, req.document_id, req.tenant_id)
+    return review
 
 @router.get("/{review_id}", response_model=ReviewResponse)
 async def get_review(

@@ -1,8 +1,10 @@
+import json
 import uuid
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.models.review import Review
 from app.schemas.reviews import ReviewCreateRequest, ReviewResponse
+from app.schemas.review_schemas import AnalysisResult
 
 class ReviewStore:
     def __init__(self, session: AsyncSession):
@@ -32,3 +34,20 @@ class ReviewStore:
         if review:
             return ReviewResponse.model_validate(review)
         return None
+
+    async def update_status(self, review_id: str, tenant_id: str, status: str, result: AnalysisResult | None = None) -> ReviewResponse | None:
+        stmt = select(Review).where(
+            Review.id == review_id,
+            Review.tenant_id == tenant_id
+        )
+        res = await self.session.execute(stmt)
+        review = res.scalar_one_or_none()
+        if not review:
+            return None
+        review.status = status
+        if result is not None:
+            review.result_json = result.model_dump_json()
+        self.session.add(review)
+        await self.session.commit()
+        await self.session.refresh(review)
+        return ReviewResponse.model_validate(review)

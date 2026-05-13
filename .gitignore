@@ -46,3 +46,6 @@ pnpm-debug.log*
 # Misc
 *.pem
 test_legal_agent.db
+*.db
+pnpm-lock.yaml
+tsconfig.tsbuildinfo
