@@ -472,6 +472,7 @@ button { font-family: inherit; cursor: pointer; border: none; }
 @media (max-width: 900px) {
   .steps-row { flex-direction: column; gap: var(--space-2); }
   .step-conn { transform: rotate(90deg); width: 40px; height: 40px; }
+  .step-wrap { flex: 1 1 100%; max-width: 400px; }
   .demo-panel { grid-template-columns: 1fr; }
   .demo-doc { border-right: none; border-bottom: 1px solid var(--outline-variant); }
   .api-grid { grid-template-columns: 1fr; }
@@ -484,8 +485,18 @@ button { font-family: inherit; cursor: pointer; border: none; }
   .nav-links { display: none; }
 }
 @media (max-width: 600px) {
+  .how-section { padding: var(--space-8) 0; }
+  .step-card { padding: var(--space-3); }
+  .step-title { font-size: 18px; }
+  .step-desc { font-size: 14px; }
+  .step-conn { width: 28px; height: 28px; }
+  .step-conn svg { width: 28px !important; height: 14px !important; }
   .footer-cols { gap: var(--space-3); }
   .footer-bottom { flex-direction: column; gap: 8px; text-align: center; }
+}
+@media (max-width: 400px) {
+  .step-card { padding: var(--space-2); }
+  .step-icon-wrap { width: 36px; height: 36px; }
 }
 
 /* ═══ Reduced Motion ═══ */
