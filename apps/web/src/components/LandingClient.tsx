@@ -6,13 +6,14 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 
 function useScrollReveal(options: { threshold?: number; rootMargin?: string } = {}) {
   const ref = useRef<HTMLDivElement>(null);
-  const [isVisible, setIsVisible] = useState(false);
+  const [isVisible, setIsVisible] = useState(true); // Start visible for SSR/static export
+  const [mounted, setMounted] = useState(false);
   useEffect(() => {
+    setMounted(true);
     if (typeof window === 'undefined') return;
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      setIsVisible(true);
-      return;
-    }
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    // Set hidden briefly so IntersectionObserver can animate it back
+    setIsVisible(false);
     const obs = new IntersectionObserver(
       ([e]) => { if (e.isIntersecting) { setIsVisible(true); obs.unobserve(e.target); } },
       { threshold: options.threshold || 0.12, rootMargin: options.rootMargin || '0px 0px -40px 0px' }
@@ -20,7 +21,7 @@ function useScrollReveal(options: { threshold?: number; rootMargin?: string } = 
     if (ref.current) obs.observe(ref.current);
     return () => obs.disconnect();
   }, []);
-  return [ref, isVisible] as const;
+  return [ref, isVisible, mounted] as const;
 }
 
 function useAnimatedCounter(end: number, duration = 2000, isActive = false) {
@@ -58,7 +59,7 @@ function ScrollReveal({
   className?: string;
   style?: React.CSSProperties;
 }) {
-  const [ref, isVisible] = useScrollReveal();
+  const [ref, isVisible, mounted] = useScrollReveal();
   const offsets: Record<string, string> = {
     up: 'translateY(28px)',
     down: 'translateY(-28px)',
@@ -66,14 +67,15 @@ function ScrollReveal({
     right: 'translateX(-28px)',
     none: 'none',
   };
+  const shouldAnimate = mounted && !isVisible;
   return (
     <div
       ref={ref}
       className={className}
       style={{
-        opacity: isVisible ? 1 : 0,
-        transform: isVisible ? 'translateY(0)' : offsets[direction],
-        transition: `opacity 0.72s cubic-bezier(0.16,1,0.3,1) ${delay}ms, transform 0.72s cubic-bezier(0.16,1,0.3,1) ${delay}ms`,
+        opacity: shouldAnimate ? 0 : 1,
+        transform: shouldAnimate ? offsets[direction] : 'translateY(0)',
+        transition: mounted ? `opacity 0.72s cubic-bezier(0.16,1,0.3,1) ${delay}ms, transform 0.72s cubic-bezier(0.16,1,0.3,1) ${delay}ms` : 'none',
         willChange: 'opacity, transform',
         ...style,
       }}
@@ -97,8 +99,12 @@ function AnimatedNumber({
     2200,
     active
   );
-  if (decimals) return <span>{(count / Math.pow(10, decimals)).toFixed(decimals)}</span>;
-  return <span>{count.toLocaleString('es-CL')}</span>;
+  // On server/initial render, show the end value directly
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const display = mounted ? count : value;
+  if (decimals) return <span>{(display / Math.pow(10, decimals)).toFixed(decimals)}</span>;
+  return <span>{display.toLocaleString('es-CL')}</span>;
 }
 
 /* ─── Icons ─── */
@@ -167,10 +173,12 @@ function Navbar() {
 function HeroSection() {
   const [typingText, setTypingText] = useState('');
   const [showResult, setShowResult] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const fullText =
     'Analizando cláusula 7.3 — Penalización por término anticipado...';
 
   useEffect(() => {
+    setMounted(true);
     let i = 0;
     const iv = setInterval(() => {
       if (i <= fullText.length) {
@@ -253,15 +261,15 @@ function HeroSection() {
                 <div className="agent-typing">
                   <span className="agent-label">Agente IA</span>
                   <span className="typing-line">
-                    {typingText}
+                    {mounted ? typingText : fullText}
                     <span className="cursor-blink">|</span>
                   </span>
                 </div>
                 <div
                   className="agent-result"
                   style={{
-                    opacity: showResult ? 1 : 0,
-                    transform: showResult ? 'translateY(0)' : 'translateY(8px)',
+                    opacity: mounted ? (showResult ? 1 : 0) : 1,
+                    transform: mounted ? (showResult ? 'translateY(0)' : 'translateY(8px)') : 'translateY(0)',
                     transition: 'all 0.5s cubic-bezier(0.16,1,0.3,1)',
                   }}
                 >
