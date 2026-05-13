@@ -35,6 +35,16 @@ class ReviewStore:
             return ReviewResponse.model_validate(review)
         return None
 
+    async def list_by_tenant(self, tenant_id: str) -> list[ReviewResponse]:
+        stmt = (
+            select(Review)
+            .where(Review.tenant_id == tenant_id)
+            .order_by(Review.created_at.desc())
+        )
+        result = await self.session.execute(stmt)
+        reviews = result.scalars().all()
+        return [ReviewResponse.model_validate(r) for r in reviews]
+
     async def update_status(self, review_id: str, tenant_id: str, status: str, result: AnalysisResult | None = None) -> ReviewResponse | None:
         stmt = select(Review).where(
             Review.id == review_id,

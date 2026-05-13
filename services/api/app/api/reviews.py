@@ -50,6 +50,14 @@ async def create_review(
     background_tasks.add_task(_run_analysis, review.id, req.document_id, req.tenant_id)
     return review
 
+@router.get("", response_model=list[ReviewResponse])
+async def list_reviews(
+    tenant_id: str,
+    session: AsyncSession = Depends(get_async_session)
+):
+    store = ReviewStore(session)
+    return await store.list_by_tenant(tenant_id)
+
 @router.get("/{review_id}", response_model=ReviewResponse)
 async def get_review(
     review_id: str,

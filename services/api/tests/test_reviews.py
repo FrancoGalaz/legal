@@ -33,3 +33,12 @@ async def test_get_review_not_found():
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         response = await client.get("/reviews/nonexistent?tenant_id=tenant-test-1")
     assert response.status_code == 404
+
+@pytest.mark.asyncio
+async def test_list_reviews():
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.get("/reviews?tenant_id=tenant-test-1")
+    assert response.status_code == 200
+    data = response.json()
+    assert isinstance(data, list)
