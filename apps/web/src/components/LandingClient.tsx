@@ -142,6 +142,7 @@ function ReportIcon() {
 
 function Navbar() {
   const [scrolled, setScrolled] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
     window.addEventListener('scroll', onScroll, { passive: true });
@@ -154,15 +155,22 @@ function Navbar() {
         <a href="#" className="nav-logo">
           Legal Agent <span style={{ color: 'var(--gold)' }}>CL</span>
         </a>
-        <div className="nav-links">
-          <a href="#como-funciona">Producto</a>
-          <a href="#demo">Demo</a>
-          <a href="#api">API</a>
-          <a href="#testimonios">Clientes</a>
-        </div>
-        <button className="btn-gold nav-cta" style={{ background: 'var(--gold)' }}>
-          Comenzar
+        <button
+          className={`menu-toggle ${menuOpen ? 'open' : ''}`}
+          onClick={() => setMenuOpen(!menuOpen)}
+          aria-label="Menú de navegación"
+        >
+          <span /><span /><span />
         </button>
+        <div className={`nav-links ${menuOpen ? 'mobile-open' : ''}`}>
+          <a href="#como-funciona" onClick={() => setMenuOpen(false)}>Producto</a>
+          <a href="#demo" onClick={() => setMenuOpen(false)}>Demo</a>
+          <a href="#api" onClick={() => setMenuOpen(false)}>API</a>
+          <a href="#testimonios" onClick={() => setMenuOpen(false)}>Clientes</a>
+          <button className="btn-gold nav-cta" style={{ background: 'var(--gold)' }} onClick={() => setMenuOpen(false)}>
+            Comenzar
+          </button>
+        </div>
       </div>
     </nav>
   );
