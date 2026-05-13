@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Legal Agent CL — Revisión de Contratos</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    /* ═══════════════════════════════════════════
+       DESIGN.md Tokens — Legal Agent CL
+       ═══════════════════════════════════════════ */
+    :root {
+      /* Colors */
+      --color-primary: #111827;
+      --color-secondary: #6B7280;
+      --color-tertiary: #2563EB;
+      --color-tertiary-hover: #1D4ED8;
+      --color-neutral: #F9FAFB;
+      --color-surface: #FFFFFF;
+      --color-border: #E5E7EB;
+      --color-border-focus: #93C5FD;
+      --color-success: #059669;
+      --color-warning: #D97706;
+      --color-danger: #DC2626;
+      --color-on-primary: #FFFFFF;
+      --color-on-tertiary: #FFFFFF;
+      --color-muted: #9CA3AF;
+
+      /* Typography */
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+
+      /* Rounded */
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 16px;
+      --radius-full: 9999px;
+
+      /* Spacing */
+      --space-xs: 4px;
+      --space-sm: 8px;
+      --space-md: 16px;
+      --space-lg: 24px;
+      --space-xl: 40px;
+      --space-2xl: 64px;
+    }
+
+    /* ═══════════════════════════════════════════
+       Reset & Base
+       ═══════════════════════════════════════════ */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font-sans);
+      font-size: 1rem;
+      line-height: 1.6;
+      color: var(--color-primary);
+      background: var(--color-neutral);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* ═══════════════════════════════════════════
+       Layout
+       ═══════════════════════════════════════════ */
+    .container {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 0 var(--space-lg);
+    }
+
+    .section { padding: var(--space-2xl) 0; }
+
+    /* ═══════════════════════════════════════════
+       Header / Nav
+       ═══════════════════════════════════════════ */
+    .header {
+      background: var(--color-surface);
+      border-bottom: 1px solid var(--color-border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header .container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 64px;
+    }
+
+    .logo {
+      font-size: 0.875rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      color: var(--color-primary);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+    }
+
+    .logo-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--color-tertiary);
+      border-radius: var(--radius-full);
+    }
+
+    .nav { display: flex; align-items: center; gap: var(--space-lg); }
+
+    .nav-link {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--color-secondary);
+      text-decoration: none;
+      transition: color 150ms;
+    }
+
+    .nav-link:hover { color: var(--color-primary); }
+
+    /* ═══════════════════════════════════════════
+       Buttons
+       ═══════════════════════════════════════════ */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-sm);
+      font-family: var(--font-sans);
+      font-size: 0.875rem;
+      font-weight: 500;
+      border-radius: var(--radius-sm);
+      padding: 12px 24px;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 150ms;
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      background: var(--color-tertiary);
+      color: var(--color-on-tertiary);
+    }
+
+    .btn-primary:hover {
+      background: var(--color-tertiary-hover);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--color-tertiary);
+      border: 1px solid var(--color-border-focus);
+    }
+
+    .btn-secondary:hover {
+      background: var(--color-neutral);
+    }
+
+    .btn-sm { padding: 8px 16px; font-size: 0.8125rem; }
+
+    /* ═══════════════════════════════════════════
+       Hero
+       ═══════════════════════════════════════════ */
+    .hero {
+      padding: var(--space-2xl) 0 64px;
+      text-align: center;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-xs);
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      color: var(--color-secondary);
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-full);
+      padding: 6px 14px;
+      margin-bottom: var(--space-lg);
+    }
+
+    .badge-dot {
+      width: 6px;
+      height: 6px;
+      background: var(--color-success);
+      border-radius: var(--radius-full);
+    }
+
+    .hero h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      line-height: 1.15;
+      letter-spacing: -0.025em;
+      color: var(--color-primary);
+      margin-bottom: var(--space-md);
+    }
+
+    .hero h1 span { color: var(--color-tertiary); }
+
+    .hero-subtitle {
+      font-size: 1.125rem;
+      line-height: 1.65;
+      color: var(--color-secondary);
+      max-width: 600px;
+      margin: 0 auto var(--space-xl);
+    }
+
+    .hero-actions {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-md);
+    }
+
+    /* ═══════════════════════════════════════════
+       API Status Bar
+       ═══════════════════════════════════════════ */
+    .api-bar {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: var(--space-md) var(--space-lg);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: var(--space-xl) auto;
+      max-width: 640px;
+    }
+
+    .api-bar-left {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+    }
+
+    .api-bar code {
+      font-family: var(--font-mono);
+      font-size: 0.875rem;
+      color: var(--color-secondary);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--color-success);
+      border-radius: var(--radius-full);
+    }
+
+    /* ═══════════════════════════════════════════
+       Flow Steps
+       ═══════════════════════════════════════════ */
+    .section-header {
+      text-align: center;
+      margin-bottom: var(--space-xl);
+    }
+
+    .section-header h2 {
+      font-size: 1.75rem;
+      font-weight: 600;
+      line-height: 1.25;
+      letter-spacing: -0.015em;
+      margin-bottom: var(--space-sm);
+    }
+
+    .section-header p {
+      font-size: 1rem;
+      color: var(--color-secondary);
+      max-width: 480px;
+      margin: 0 auto;
+    }
+
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-lg);
+    }
+
+    .step-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: var(--space-lg);
+      position: relative;
+      transition: border-color 150ms;
+    }
+
+    .step-card:hover {
+      border-color: var(--color-border-focus);
+    }
+
+    .step-number {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      background: var(--color-tertiary);
+      color: var(--color-on-tertiary);
+      border-radius: var(--radius-full);
+      font-size: 0.8125rem;
+      font-weight: 600;
+      margin-bottom: var(--space-md);
+    }
+
+    .step-card h3 {
+      font-size: 1.125rem;
+      font-weight: 600;
+      line-height: 1.35;
+      margin-bottom: var(--space-sm);
+    }
+
+    .step-card p {
+      font-size: 0.875rem;
+      line-height: 1.5;
+      color: var(--color-secondary);
+    }
+
+    /* ═══════════════════════════════════════════
+       Endpoints Table
+       ═══════════════════════════════════════════ */
+    .endpoints {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+    }
+
+    .endpoint-row {
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+      padding: var(--space-md) var(--space-lg);
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .endpoint-row:last-child { border-bottom: none; }
+
+    .method {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      padding: 4px 10px;
+      border-radius: var(--radius-sm);
+      min-width: 56px;
+      text-align: center;
+    }
+
+    .method-get { background: #ECFDF5; color: var(--color-success); }
+    .method-post { background: #EFF6FF; color: var(--color-tertiary); }
+
+    .endpoint-path {
+      font-family: var(--font-mono);
+      font-size: 0.875rem;
+      color: var(--color-primary);
+    }
+
+    .endpoint-desc {
+      font-size: 0.875rem;
+      color: var(--color-secondary);
+      margin-left: auto;
+    }
+
+    /* ═══════════════════════════════════════════
+       Footer
+       ═══════════════════════════════════════════ */
+    .footer {
+      padding: var(--space-lg) 0;
+      border-top: 1px solid var(--color-border);
+      text-align: center;
+    }
+
+    .footer p {
+      font-size: 0.75rem;
+      color: var(--color-muted);
+    }
+
+    /* ═══════════════════════════════════════════
+       Responsive
+       ═══════════════════════════════════════════ */
+    @media (max-width: 768px) {
+      .hero h1 { font-size: 1.75rem; }
+      .hero-subtitle { font-size: 1rem; }
+      .steps-grid { grid-template-columns: 1fr; }
+      .hero-actions { flex-direction: column; }
+      .api-bar { flex-direction: column; gap: var(--space-sm); }
+      .endpoint-row { flex-wrap: wrap; }
+      .endpoint-desc { margin-left: 0; width: 100%; }
+      .nav { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="container">
+      <a href="#" class="logo">
+        <span class="logo-dot"></span>
+        Legal Agent CL
+      </a>
+      <nav class="nav">
+        <a href="#flow" class="nav-link">Cómo funciona</a>
+        <a href="#api" class="nav-link">API</a>
+        <a href="#" class="btn btn-primary btn-sm">Empezar</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="container">
+      <div class="badge">
+        <span class="badge-dot"></span>
+        MVP · En desarrollo
+      </div>
+      <h1>Revisión de contratos<br><span>asistida por IA</span></h1>
+      <p class="hero-subtitle">
+        SaaS legal multi-tenant para estudios jurídicos y equipos in-house en Chile.
+        Intake documental, análisis de riesgos y hallazgos estructurados.
+      </p>
+      <div class="hero-actions">
+        <a href="#flow" class="btn btn-primary">Ver cómo funciona</a>
+        <a href="#api" class="btn btn-secondary">Documentación API</a>
+      </div>
+
+      <!-- API Status -->
+      <div class="api-bar">
+        <div class="api-bar-left">
+          <span class="status-dot"></span>
+          <code>http://localhost:8000</code>
+        </div>
+        <span style="font-size: 0.75rem; color: var(--color-success); font-weight: 500;">Backend activo</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Flow -->
+  <section id="flow" class="section" style="background: var(--color-surface);">
+    <div class="container">
+      <div class="section-header">
+        <h2>Cómo funciona</h2>
+        <p>Tres pasos desde la carga del contrato hasta los hallazgos estructurados.</p>
+      </div>
+      <div class="steps-grid">
+        <div class="step-card">
+          <div class="step-number">1</div>
+          <h3>Subir contrato</h3>
+          <p>Carga un contrato comercial chileno en PDF, DOCX o texto para iniciar el análisis.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-number">2</div>
+          <h3>Ejecutar revisión</h3>
+          <p>El motor analiza cláusulas, identifica riesgos y clasifica hallazgos por severidad.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-number">3</div>
+          <h3>Recibir hallazgos</h3>
+          <p>Resultado estructurado con fundamento legal, severidad y acciones sugeridas.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- API -->
+  <section id="api" class="section">
+    <div class="container">
+      <div class="section-header">
+        <h2>Endpoints</h2>
+        <p>API REST con persistencia real y soporte multi-tenant.</p>
+      </div>
+      <div class="endpoints">
+        <div class="endpoint-row">
+          <span class="method method-get">GET</span>
+          <span class="endpoint-path">/health</span>
+          <span class="endpoint-desc">Estado del servicio</span>
+        </div>
+        <div class="endpoint-row">
+          <span class="method method-post">POST</span>
+          <span class="endpoint-path">/documents</span>
+          <span class="endpoint-desc">Registrar documento</span>
+        </div>
+        <div class="endpoint-row">
+          <span class="method method-post">POST</span>
+          <span class="endpoint-path">/reviews</span>
+          <span class="endpoint-desc">Crear revisión</span>
+        </div>
+        <div class="endpoint-row">
+          <span class="method method-get">GET</span>
+          <span class="endpoint-path">/reviews/{id}</span>
+          <span class="endpoint-desc">Consultar revisión</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <p>Legal Agent CL · MVP en desarrollo · 2026</p>
+    </div>
+  </footer>
+</body>
+</html>
