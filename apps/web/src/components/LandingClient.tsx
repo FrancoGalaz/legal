@@ -6,22 +6,22 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 
 function useScrollReveal(options: { threshold?: number; rootMargin?: string } = {}) {
   const ref = useRef<HTMLDivElement>(null);
-  const [isVisible, setIsVisible] = useState(true); // Start visible for SSR/static export
+  const [revealed, setRevealed] = useState(true); // Always visible on SSR
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
     setMounted(true);
     if (typeof window === 'undefined') return;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    // Set hidden briefly so IntersectionObserver can animate it back
-    setIsVisible(false);
+    // Small delay then observe for slide-in animation
+    setRevealed(false);
     const obs = new IntersectionObserver(
-      ([e]) => { if (e.isIntersecting) { setIsVisible(true); obs.unobserve(e.target); } },
+      ([e]) => { if (e.isIntersecting) { setRevealed(true); obs.unobserve(e.target); } },
       { threshold: options.threshold || 0.12, rootMargin: options.rootMargin || '0px 0px -40px 0px' }
     );
     if (ref.current) obs.observe(ref.current);
     return () => obs.disconnect();
   }, []);
-  return [ref, isVisible, mounted] as const;
+  return [ref, revealed, mounted] as const;
 }
 
 function useAnimatedCounter(end: number, duration = 2000, isActive = false) {
@@ -67,7 +67,7 @@ function ScrollReveal({
   className?: string;
   style?: React.CSSProperties;
 }) {
-  const [ref, isVisible, mounted] = useScrollReveal();
+  const [ref, revealed, mounted] = useScrollReveal();
   const offsets: Record<string, string> = {
     up: 'translateY(28px)',
     down: 'translateY(-28px)',
@@ -75,13 +75,13 @@ function ScrollReveal({
     right: 'translateX(-28px)',
     none: 'none',
   };
-  const shouldAnimate = mounted && !isVisible;
+  const shouldAnimate = mounted && !revealed;
   return (
     <div
       ref={ref}
       className={className}
       style={{
-        opacity: shouldAnimate ? 0 : 1,
+        opacity: 1,
         transform: shouldAnimate ? offsets[direction] : 'translateY(0)',
         transition: mounted ? `opacity 0.72s cubic-bezier(0.16,1,0.3,1) ${delay}ms, transform 0.72s cubic-bezier(0.16,1,0.3,1) ${delay}ms` : 'none',
         willChange: 'opacity, transform',
@@ -316,7 +316,7 @@ interface MetricItem {
 }
 
 function MetricsSection() {
-  const [ref, vis] = useScrollReveal({ threshold: 0.35 });
+  const [ref, vis, mounted] = useScrollReveal({ threshold: 0.35 });
   const data: MetricItem[] = [
     { val: 12847, label: 'Contratos Revisados', pre: '+' },
     { val: 97.3, label: 'Precisión del Análisis', suf: '%', dec: 1 },
