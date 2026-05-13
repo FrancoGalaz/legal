@@ -41,6 +41,7 @@ jobs:
         run: pnpm build
         env:
           NEXT_OUTPUT: export
+          NEXT_BASE_PATH: /legal
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
