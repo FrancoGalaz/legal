@@ -32,3 +32,13 @@ class DocumentStore:
         if doc:
             return DocumentResponse.model_validate(doc)
         return None
+
+    async def list_by_tenant(self, tenant_id: str) -> list[DocumentResponse]:
+        stmt = (
+            select(Document)
+            .where(Document.tenant_id == tenant_id)
+            .order_by(Document.created_at.desc())
+        )
+        result = await self.session.execute(stmt)
+        docs = result.scalars().all()
+        return [DocumentResponse.model_validate(d) for d in docs]

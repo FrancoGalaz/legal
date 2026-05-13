@@ -14,6 +14,14 @@ async def create_document(
     store = DocumentStore(session)
     return await store.create(req)
 
+@router.get("", response_model=list[DocumentResponse])
+async def list_documents(
+    tenant_id: str,
+    session: AsyncSession = Depends(get_async_session)
+):
+    store = DocumentStore(session)
+    return await store.list_by_tenant(tenant_id)
+
 @router.get("/{document_id}", response_model=DocumentResponse)
 async def get_document(
     document_id: str,
