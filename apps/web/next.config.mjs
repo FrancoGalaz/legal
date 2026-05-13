@@ -1,6 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: "standalone",
+  output: process.env.NEXT_OUTPUT || "standalone",
+  images: {
+    unoptimized: process.env.NEXT_OUTPUT === "export",
+  },
 };
 
 export default nextConfig;
