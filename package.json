@@ -1,0 +1,20 @@
+{
+  "name": "legal-agent-cl",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Chilean legal AI SaaS MVP — contract review agent",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:web": "npm run dev -w apps/web",
+    "dev:api": "cd services/api && uvicorn app.main:app --reload --port 8000",
+    "build:web": "npm run build -w apps/web",
+    "lint": "echo 'no linters configured yet'",
+    "typecheck": "echo 'no typecheck configured yet'"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

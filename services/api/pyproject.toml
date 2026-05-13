@@ -1,0 +1,30 @@
+[project]
+name = "legal-agent-api"
+version = "0.1.0"
+description = "FastAPI backend for the Legal Agent CL SaaS"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.115,<1",
+    "uvicorn[standard]>=0.30,<1",
+    "sqlalchemy[asyncio]>=2.0,<3",
+    "asyncpg>=0.29,<1",
+    "aiosqlite>=0.20,<1",
+    "redis>=5,<6",
+    "pydantic>=2,<3",
+    "pydantic-settings>=2,<3",
+    "httpx>=0.27,<1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8,<9",
+    "pytest-asyncio>=0.23,<1",
+    "ruff>=0.4,<1",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
