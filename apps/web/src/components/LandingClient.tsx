@@ -384,38 +384,18 @@ function HowItWorksSection() {
             Tres pasos para transformar horas de revisión en segundos de análisis.
           </p>
         </ScrollReveal>
-        <div className="steps-row">
+        <div className="steps-grid">
           {steps.map((s, i) => (
-            <div key={i} style={{ display: 'flex', alignItems: 'center' }}>
-              <ScrollReveal delay={i * 140} className="step-wrap">
-                <div className="step-card">
-                  <div className="step-num-badge">{s.num}</div>
-                  <div className="step-icon-wrap">
-                    <s.icon />
-                  </div>
-                  <h3 className="step-title">{s.title}</h3>
-                  <p className="step-desc">{s.desc}</p>
+            <ScrollReveal key={i} delay={i * 140} className="step-wrap">
+              <div className="step-card">
+                <div className="step-num-badge">{s.num}</div>
+                <div className="step-icon-wrap">
+                  <s.icon />
                 </div>
-              </ScrollReveal>
-              {i < 2 && (
-                <div className="step-conn" aria-hidden="true">
-                  <svg
-                    viewBox="0 0 80 24"
-                    className="conn-arrow"
-                    style={{ width: 60, height: 20 }}
-                  >
-                    <path
-                      d="M0 12h64m0 0l-8-6m8 6l-8 6"
-                      stroke="var(--gold)"
-                      strokeWidth="2"
-                      fill="none"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </div>
-              )}
-            </div>
+                <h3 className="step-title">{s.title}</h3>
+                <p className="step-desc">{s.desc}</p>
+              </div>
+            </ScrollReveal>
           ))}
         </div>
       </div>
