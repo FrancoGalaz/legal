@@ -47,7 +47,6 @@ pnpm-debug.log*
 *.pem
 test_legal_agent.db
 *.db
-pnpm-lock.yaml
 tsconfig.tsbuildinfo
 stitch-*.png
 stitch-*.html
