@@ -7,35 +7,35 @@ export default function NewReviewPage() {
   const router = useRouter();
   const [text, setText] = useState("");
   const [fileName, setFileName] = useState("");
+  const [fileObj, setFileObj] = useState<File | null>(null);
   const [status, setStatus] = useState<"idle" | "uploading" | "analyzing" | "done" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
   const [progressMsg, setProgressMsg] = useState("");
   const [dragOver, setDragOver] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const handleFile = (file: File) => {
-    setFileName(file.name);
-    setStatus("uploading");
-    setProgressMsg("Leyendo archivo...");
+  const isPdf = fileName.toLowerCase().endsWith(".pdf") || fileName.toLowerCase().endsWith(".docx");
 
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      const content = e.target?.result as string;
-      setText(content);
-      setStatus("idle");
-    };
-    reader.onerror = () => {
-      setErrorMsg("Error al leer el archivo");
-      setStatus("error");
-    };
-    reader.readAsText(file);
+  const handleFileDrop = (file: File) => {
+    setFileName(file.name);
+    setFileObj(file);
+
+    // For .txt files, read content into textarea for editing
+    if (file.name.toLowerCase().endsWith(".txt")) {
+      const reader = new FileReader();
+      reader.onload = (e) => setText((e.target?.result as string) || "");
+      reader.readAsText(file);
+    } else {
+      // PDF/DOCX: just show filename, backend extracts text
+      setText(`[Archivo: ${file.name} — pendiente de extracción en el servidor]`);
+    }
   };
 
   const handleDrop = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setDragOver(false);
     const file = e.dataTransfer.files[0];
-    if (file) handleFile(file);
+    if (file) handleFileDrop(file);
   };
 
   const handleDragOver = (e: DragEvent<HTMLDivElement>) => {
@@ -44,34 +44,58 @@ export default function NewReviewPage() {
   };
 
   const handleAnalyze = async () => {
-    if (!text.trim()) return;
+    if (!text.trim() && !fileObj) return;
     setStatus("analyzing");
     setErrorMsg("");
-    setProgressMsg("Enviando documento...");
+    setProgressMsg("Preparando documento...");
 
     try {
-      // 1. Create document
-      const docRes = await fetch("http://localhost:8000/documents", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          tenant_id: "tenant-demo",
-          filename: fileName || "contrato.txt",
-          content_type: "text/plain",
-          text_content: text,
-        }),
-      });
-      if (!docRes.ok) throw new Error("Error al crear documento");
-      const doc = await docRes.json();
-      setProgressMsg("Iniciando análisis con IA...");
+      let docId: string;
 
-      // 2. Create review
+      // 1. Send file or text to backend
+      if (fileObj && isPdf) {
+        // Upload raw file — backend extracts text
+        setProgressMsg("Extrayendo texto del archivo...");
+        const formData = new FormData();
+        formData.append("tenant_id", "tenant-demo");
+        formData.append("file", fileObj);
+
+        const uploadRes = await fetch("http://localhost:8000/documents/upload", {
+          method: "POST",
+          body: formData,
+        });
+        if (!uploadRes.ok) {
+          const errText = await uploadRes.text();
+          throw new Error(`Error al subir: ${errText}`);
+        }
+        const doc = await uploadRes.json();
+        docId = doc.id;
+      } else {
+        // Send pasted text or .txt content
+        setProgressMsg("Enviando documento...");
+        const docRes = await fetch("http://localhost:8000/documents", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            tenant_id: "tenant-demo",
+            filename: fileName || "contrato.txt",
+            content_type: "text/plain",
+            text_content: text,
+          }),
+        });
+        if (!docRes.ok) throw new Error("Error al crear documento");
+        const doc = await docRes.json();
+        docId = doc.id;
+      }
+
+      // 2. Start analysis
+      setProgressMsg("Iniciando análisis con IA...");
       const revRes = await fetch("http://localhost:8000/reviews", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           tenant_id: "tenant-demo",
-          document_id: doc.id,
+          document_id: docId,
           review_type: "commercial",
           language: "es",
         }),
@@ -79,21 +103,17 @@ export default function NewReviewPage() {
       if (!revRes.ok) throw new Error("Error al crear revisión");
       const review = await revRes.json();
 
+      // 3. Poll until done
       setProgressMsg("Analizando contrato...");
-
-      // 3. Poll for completion
       let current = review;
       while (current.status === "pending" || current.status === "in_progress") {
         await new Promise((r) => setTimeout(r, 1500));
         const pollRes = await fetch(
           `http://localhost:8000/reviews/${review.id}?tenant_id=tenant-demo`
         );
-        if (pollRes.ok) {
-          current = await pollRes.json();
-        }
+        if (pollRes.ok) current = await pollRes.json();
       }
 
-      // 4. Redirect to results
       setStatus("done");
       router.push(`/app/review/${review.id}`);
     } catch (e: any) {
@@ -101,6 +121,8 @@ export default function NewReviewPage() {
       setStatus("error");
     }
   };
+
+  const canAnalyze = (text.trim() || fileObj) && status !== "analyzing";
 
   return (
     <div style={{ maxWidth: 720, margin: "0 auto" }}>
@@ -116,7 +138,7 @@ export default function NewReviewPage() {
         Nuevo Análisis
       </h1>
       <p style={{ fontSize: 14, color: "var(--on-surface-variant)", margin: "0 0 24px" }}>
-        Sube un archivo o pega el texto del contrato para analizarlo con IA.
+        Sube un contrato en PDF, DOCX o TXT, o pega el texto directamente.
       </p>
 
       {/* Upload zone */}
@@ -143,7 +165,7 @@ export default function NewReviewPage() {
           style={{ display: "none" }}
           onChange={(e) => {
             const file = e.target.files?.[0];
-            if (file) handleFile(file);
+            if (file) handleFileDrop(file);
           }}
         />
         <span
@@ -154,28 +176,45 @@ export default function NewReviewPage() {
             color: dragOver ? "var(--gold)" : "var(--navy-muted)",
           }}
         >
-          {dragOver ? "📄" : "📁"}
+          {dragOver ? "📄" : fileObj ? "✅" : "📁"}
         </span>
         <p style={{ color: "var(--on-surface)", fontSize: 14, fontWeight: 500, margin: "0 0 4px" }}>
-          {dragOver ? "Suelta aquí" : "Arrastra un archivo o haz clic"}
+          {dragOver ? "Suelta aquí" : fileObj ? `Archivo listo: ${fileName}` : "Arrastra un archivo o haz clic"}
         </p>
         <p style={{ color: "var(--navy-muted)", fontSize: 12, margin: 0 }}>
-          PDF, DOCX o TXT
+          {fileObj ? `${(fileObj.size / 1024).toFixed(0)} KB` : "PDF, DOCX o TXT — hasta 10 MB"}
         </p>
-        {fileName && (
-          <p style={{ color: "var(--gold)", fontSize: 13, margin: "12px 0 0", fontWeight: 500 }}>
-            ✓ {fileName}
-          </p>
+        {fileObj && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setFileObj(null);
+              setFileName("");
+              setText("");
+            }}
+            style={{
+              marginTop: 12,
+              background: "none",
+              border: "none",
+              color: "var(--risk-high)",
+              fontSize: 12,
+              cursor: "pointer",
+              textDecoration: "underline",
+            }}
+          >
+            Quitar archivo
+          </button>
         )}
       </div>
 
-      {/* Text area */}
+      {/* Text area (for .txt or paste) */}
       <div style={{ marginBottom: 16 }}>
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="O pega el texto del contrato aquí..."
-          rows={8}
+          placeholder={fileObj && isPdf ? "El texto se extraerá del archivo en el servidor..." : "O pega el texto del contrato aquí..."}
+          rows={6}
+          readOnly={!!(fileObj && isPdf)}
           style={{
             width: "100%",
             padding: 14,
@@ -185,13 +224,14 @@ export default function NewReviewPage() {
             fontSize: 14,
             lineHeight: 1.6,
             color: "var(--on-surface)",
-            background: "var(--surface-card)",
+            background: fileObj && isPdf ? "rgba(4,22,39,0.02)" : "var(--surface-card)",
             resize: "vertical",
+            opacity: fileObj && isPdf ? 0.6 : 1,
           }}
         />
       </div>
 
-      {/* Status / Error */}
+      {/* Status */}
       {status === "analyzing" && (
         <div
           style={{
@@ -201,10 +241,11 @@ export default function NewReviewPage() {
             borderRadius: 6,
             marginBottom: 12,
             fontSize: 14,
-            color: "var(--gold-container)",
+            color: "var(--gold)",
+            fontWeight: 500,
           }}
         >
-          <span style={{ fontWeight: 600 }}>⏳ {progressMsg}</span>
+          ⏳ {progressMsg}
         </div>
       )}
 
@@ -227,30 +268,24 @@ export default function NewReviewPage() {
       {/* Analyze button */}
       <button
         onClick={handleAnalyze}
-        disabled={!text.trim() || status === "analyzing"}
+        disabled={!canAnalyze}
         style={{
           width: "100%",
           padding: "14px 24px",
-          background:
-            !text.trim() || status === "analyzing"
-              ? "var(--navy-muted)"
-              : "var(--gold)",
+          background: canAnalyze ? "var(--gold)" : "var(--navy-muted)",
           color: "#fff",
           fontWeight: 600,
           fontSize: 15,
           border: "none",
           borderRadius: 6,
-          cursor:
-            !text.trim() || status === "analyzing" ? "not-allowed" : "pointer",
+          cursor: canAnalyze ? "pointer" : "not-allowed",
           transition: "background 0.2s",
         }}
         onMouseEnter={(e) => {
-          if (text.trim() && status !== "analyzing")
-            e.currentTarget.style.background = "#8a6a20";
+          if (canAnalyze) e.currentTarget.style.background = "#8a6a20";
         }}
         onMouseLeave={(e) => {
-          if (text.trim() && status !== "analyzing")
-            e.currentTarget.style.background = "var(--gold)";
+          if (canAnalyze) e.currentTarget.style.background = "var(--gold)";
         }}
       >
         {status === "analyzing" ? "Analizando..." : "Analizar Contrato"}
