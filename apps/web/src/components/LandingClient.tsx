@@ -27,15 +27,23 @@ function useScrollReveal(options: { threshold?: number; rootMargin?: string } = 
 function useAnimatedCounter(end: number, duration = 2000, isActive = false) {
   const [count, setCount] = useState(0);
   const done = useRef(false);
+  const prevActive = useRef(isActive);
   useEffect(() => {
-    if (!isActive || done.current) return;
+    if (!isActive) return;
+    // Reset when transitioning from inactive to active
+    if (!prevActive.current && isActive) {
+      done.current = false;
+      setCount(0);
+    }
+    prevActive.current = isActive;
+    if (done.current) return;
     done.current = true;
     if (typeof window === 'undefined') { setCount(end); return; }
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { setCount(end); return; }
     const t0 = performance.now();
     let raf: number;
     const tick = (now: number) => {
-      const p = Math.min((now - t0) / duration, 1);
+      const p = Math.min(Math.max((now - t0) / duration, 0), 1);
       const e = 1 - Math.pow(1 - p, 3);
       setCount(Math.floor(e * end));
       if (p < 1) raf = requestAnimationFrame(tick);
