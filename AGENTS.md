@@ -15,18 +15,18 @@ GitHub Pages: https://francogalaz.github.io/legal (NEXT_OUTPUT=export, base path
 ## Current State (2026-05-14)
 - **Fase 1 COMPLETA**: Landing page premium con responsive, waitlist form, CI/CD deploy-pages.yml funcional.
 - **GitHub Pages LIVE**: https://francogalaz.github.io/legal/ — HTTP 200, incluye waitlist.
-- **Fase 2 (App Funcional) casi completa**: dashboard, contracts, history, review/new, review/[id] pages.
+- **Fase 2 (App Funcional) COMPLETA**: dashboard, contracts, history, review/new, review/[id] pages.
 - **Fase 3 (AI Core) parcial**: LLMService con OpenRouter, prompts de derecho chileno, análisis background.
-- **Backend FastAPI**: endpoints /documents, /reviews, /documents/upload, /health con SQLAlchemy async.
-- **Auth pendiente**: falta Clerk/NextAuth para multi-tenant real.
-- **API URL**: usa `NEXT_PUBLIC_API_URL` como env var para apuntar al backend.
+- **Auth implementada (JWT)**: login/registro en frontend + backend con JWT, User model en DB, proteccion de rutas cliente-side.
+- **Backend FastAPI**: endpoints /auth/register, /auth/login, /auth/me, /documents, /reviews, /documents/upload, /health con SQLAlchemy async.
+- **API URL**: todas las paginas usan `NEXT_PUBLIC_API_URL` en vez de URLs hardcodeadas.
 
 ## Roadmap (orden de prioridad)
 
 ### Fase 2 — App Funcional (CONTINUAR)
 4. ✅ Crear páginas de la app: login, dashboard, upload de documentos, resultados de revisión
 5. ✅ Conectar frontend con API backend (llamar /documents, /reviews desde el frontend)
-6. ❌ **Implementar autenticación (Clerk o NextAuth con proveedor OAuth)** — PRÓXIMO
+6. ✅ **Implementar autenticación (JWT con login/registro)** — login/registro con email y password, JWT tokens en backend, proteccion de rutas en frontend
 7. ✅ Subida de archivos PDF/DOCX con drag-and-drop y progress bar
 
 ### Fase 3 — AI Core
@@ -83,5 +83,5 @@ Ver DESIGN.md en raíz. Tokens principales:
 - `apps/web/pnpm-lock.yaml` está untracked — no debe commitearse (está en .gitignore implícito, verificar).
 - NEXT_OUTPUT=export requiere que todas las rutas sean static-friendly (no APIs, no middleware dinámico).
 - npm/npx del sistema está roto (Node 24) — usar `pnpm` directamente o `/home/pcagente/.npm-global/bin/pnpm`.
-- `apps/web/src/app/app/review/new/page.tsx` tiene URLs hardcodeadas `http://localhost:8000` — reemplazar con `process.env.NEXT_PUBLIC_API_URL`.
+- `apps/web/src/app/app/review/new/page.tsx` ya usa `NEXT_PUBLIC_API_URL` (revisar que las demas paginas tambien)
 - LLM necesita `OPENROUTER_API_KEY` en `.env` para funcionar.
