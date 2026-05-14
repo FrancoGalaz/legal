@@ -7,6 +7,7 @@ from app.models.base import Base
 from app.models.tenant import Tenant  # noqa: F401
 from app.models.document import Document  # noqa: F401
 from app.models.review import Review  # noqa: F401
+from app.models.user import User  # noqa: F401
 
 engine = create_async_engine(settings.DATABASE_URL, future=True, echo=False)
 SessionLocal = async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)

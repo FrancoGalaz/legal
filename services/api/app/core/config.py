@@ -10,6 +10,10 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/legal_agent"
     REDIS_URL: str = "redis://localhost:6379/0"
 
+    # JWT auth — change JWT_SECRET_KEY in production!
+    JWT_SECRET_KEY: str = "change-me-in-production-use-a-real-secret"
+    JWT_EXPIRATION_DAYS: int = 30
+
     # LLM config — set OPENAI_API_KEY or OPENROUTER_API_KEY
     OPENAI_API_KEY: str = ""
     OPENROUTER_API_KEY: str = ""
