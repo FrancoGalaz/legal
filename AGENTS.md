@@ -16,9 +16,9 @@ GitHub Pages: https://francogalaz.github.io/legal (NEXT_OUTPUT=export, base path
 - **Fase 1 COMPLETA**: Landing page premium con responsive, waitlist form, CI/CD deploy-pages.yml funcional.
 - **GitHub Pages LIVE**: https://francogalaz.github.io/legal/ — HTTP 200, incluye waitlist.
 - **Fase 2 (App Funcional) COMPLETA**: dashboard, contracts, history, review/new, review/[id] pages.
-- **Fase 3 (AI Core) parcial**: LLMService con OpenRouter, prompts de derecho chileno, análisis background.
+- **Fase 3 (AI Core) COMPLETA**: LLMService con OpenRouter, prompts de derecho chileno específicos por tipo, dashboard con métricas avanzadas (distribución riesgo, tipo, tendencia semanal), historial con filtros y búsqueda por nombre de archivo.
 - **Auth implementada (JWT)**: login/registro en frontend + backend con JWT, User model en DB, proteccion de rutas cliente-side.
-- **Backend FastAPI**: endpoints /auth/register, /auth/login, /auth/me, /documents, /reviews, /documents/upload, /health con SQLAlchemy async.
+- **Backend FastAPI**: endpoints /auth/register, /auth/login, /auth/me, /documents, /reviews, /reviews/stats, /documents/upload, /health con SQLAlchemy async y JOIN optimizado.
 - **API URL**: todas las paginas usan `NEXT_PUBLIC_API_URL` en vez de URLs hardcodeadas.
 
 ## Roadmap (orden de prioridad)
