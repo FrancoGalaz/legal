@@ -38,12 +38,36 @@ export interface ReviewResponse {
   created_at: string;
 }
 
-// ── API Client ──
+export interface UserResponse {
+  id: string;
+  email: string;
+  name: string;
+  is_active: boolean;
+  created_at: string;
+}
+
+// ── Auth helpers ──
+
+function getToken(): string | null {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem("legal_agent_token");
+}
+
+function authHeaders(): Record<string, string> {
+  const token = getToken();
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+  return headers;
+}
+
+// ── Request helper ──
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const url = `${API_BASE}${path}`;
   const res = await fetch(url, {
-    headers: { "Content-Type": "application/json", ...options.headers },
+    headers: { ...authHeaders(), ...options.headers } as Record<string, string>,
     ...options,
   });
   if (!res.ok) {
@@ -54,6 +78,27 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 }
 
 export const api = {
+  // ── Auth ──
+
+  /** Register a new user */
+  register: (email: string, password: string, name: string) =>
+    request<{ access_token: string; token_type: string }>("/auth/register", {
+      method: "POST",
+      body: JSON.stringify({ email, password, name }),
+    }),
+
+  /** Log in with email/password */
+  login: (email: string, password: string) =>
+    request<{ access_token: string; token_type: string }>("/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ email, password }),
+    }),
+
+  /** Get current user profile */
+  getMe: () => request<UserResponse>("/auth/me"),
+
+  // ── Documents ──
+
   /** Health check */
   health: () => request<{ status: string; version: string }>("/health"),
 
@@ -72,6 +117,8 @@ export const api = {
   /** Get a document by ID */
   getDocument: (id: string, tenant_id: string) =>
     request<DocumentResponse>(`/documents/${id}?tenant_id=${tenant_id}`),
+
+  // ── Reviews ──
 
   /** Start a review (triggers background LLM analysis) */
   createReview: (data: {
@@ -95,7 +142,6 @@ export const api = {
     filename: string = "contrato.txt",
     tenant_id: string = "tenant-anon"
   ): Promise<ReviewResponse> {
-    // 1. Upload document
     const doc = await this.createDocument({
       tenant_id,
       filename,
@@ -103,7 +149,6 @@ export const api = {
       text_content: text,
     });
 
-    // 2. Start review
     const review = await this.createReview({
       tenant_id,
       document_id: doc.id,
@@ -111,7 +156,6 @@ export const api = {
       language: "es",
     });
 
-    // 3. Poll until completed or failed
     let current = review;
     while (current.status === "pending" || current.status === "in_progress") {
       await new Promise((r) => setTimeout(r, 1000));

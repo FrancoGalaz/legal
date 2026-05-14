@@ -169,8 +169,9 @@ export default function ReviewPage() {
     const poll = async () => {
       try {
         while (!cancelled) {
+          const BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
           const res = await fetch(
-            `http://localhost:8000/reviews/${reviewId}?tenant_id=tenant-demo`
+            `${BASE}/reviews/${reviewId}?tenant_id=tenant-demo`
           );
           if (!res.ok) throw new Error("Review not found");
           const data: Review = await res.json();

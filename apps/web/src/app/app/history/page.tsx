@@ -34,7 +34,8 @@ export default function HistoryPage() {
   useEffect(() => {
     const load = async () => {
       try {
-        const res = await fetch("http://localhost:8000/reviews?tenant_id=tenant-demo");
+        const BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+        const res = await fetch(`${BASE}/reviews?tenant_id=tenant-demo`);
         if (res.ok) {
           const data = await res.json();
           setReviews(Array.isArray(data) ? data : []);

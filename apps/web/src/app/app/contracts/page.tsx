@@ -74,9 +74,10 @@ export default function ContractsPage() {
     setLoading(true);
     setError(null);
     try {
+      const BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
       const [docsRes, revsRes] = await Promise.all([
-        fetch("http://localhost:8000/documents?tenant_id=tenant-demo"),
-        fetch("http://localhost:8000/reviews?tenant_id=tenant-demo"),
+        fetch(`${BASE}/documents?tenant_id=tenant-demo`),
+        fetch(`${BASE}/reviews?tenant_id=tenant-demo`),
       ]);
 
       if (docsRes.ok) {

@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 
 const NAV_SECTIONS = [
   {
@@ -63,9 +64,53 @@ function Icon({ name }: { name: string }) {
   return icons[name] || null;
 }
 
-export default function AppLayout({ children }: { children: React.ReactNode }) {
+/** Inner content — must be inside AuthProvider */
+function AppLayoutInner({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, loading, logout } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
+
+  // If on login page, don't show the sidebar
+  if (pathname === "/app/login") {
+    return <>{children}</>;
+  }
+
+  // Auth guard — redirect to login if not authenticated
+  useEffect(() => {
+    if (!loading && !user) {
+      router.replace("/app/login");
+    }
+  }, [loading, user, router]);
+
+  if (loading) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          minHeight: "100vh",
+          background: "var(--surface)",
+          color: "var(--navy-muted)",
+          fontSize: 14,
+        }}
+      >
+        Cargando...
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null; // Will redirect in the effect
+  }
+
+  const initials = user.name
+    .split(" ")
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
 
   return (
     <div style={{ display: "flex", minHeight: "100vh", background: "var(--surface)" }}>
@@ -280,40 +325,70 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               })}
             </span>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <span
-              style={{
-                width: 28,
-                height: 28,
-                borderRadius: "50%",
-                background: "var(--gold)",
-                color: "#fff",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: 11,
-                fontWeight: 700,
-                fontFamily: "var(--font-display)",
-              }}
-            >
-              D
-            </span>
-            <div>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            {/* User avatar + name */}
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <span
                 style={{
-                  fontSize: 13,
-                  color: "var(--on-surface)",
-                  fontWeight: 500,
-                  display: "block",
-                  lineHeight: 1.2,
+                  width: 28,
+                  height: 28,
+                  borderRadius: "50%",
+                  background: "var(--gold)",
+                  color: "#fff",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 11,
+                  fontWeight: 700,
+                  fontFamily: "var(--font-display)",
                 }}
               >
-                Demo
+                {initials}
               </span>
-              <span style={{ fontSize: 11, color: "var(--navy-muted)" }}>
-                Plan Gratuito
-              </span>
+              <div>
+                <span
+                  style={{
+                    fontSize: 13,
+                    color: "var(--on-surface)",
+                    fontWeight: 500,
+                    display: "block",
+                    lineHeight: 1.2,
+                  }}
+                >
+                  {user.name}
+                </span>
+                <span style={{ fontSize: 11, color: "var(--navy-muted)" }}>
+                  Plan Gratuito
+                </span>
+              </div>
             </div>
+
+            {/* Logout button */}
+            <button
+              onClick={logout}
+              style={{
+                background: "none",
+                border: "1px solid var(--outline-variant)",
+                borderRadius: 6,
+                padding: "6px 12px",
+                color: "var(--navy-muted)",
+                fontSize: 12,
+                fontWeight: 500,
+                cursor: "pointer",
+                fontFamily: "inherit",
+                transition: "all 0.15s",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = "var(--gold)";
+                e.currentTarget.style.color = "var(--gold)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = "var(--outline-variant)";
+                e.currentTarget.style.color = "var(--navy-muted)";
+              }}
+            >
+              Cerrar Sesión
+            </button>
           </div>
         </header>
 
@@ -321,5 +396,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <main style={{ flex: 1, padding: 32, overflow: "auto" }}>{children}</main>
       </div>
     </div>
+  );
+}
+
+/** Auth-aware app layout */
+export default function AppLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <AuthProvider>
+      <AppLayoutInner>{children}</AppLayoutInner>
+    </AuthProvider>
   );
 }

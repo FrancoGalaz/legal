@@ -36,9 +36,10 @@ export default function DashboardPage() {
   const load = async () => {
     setLoading(true);
     try {
+      const BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
       const [rRes, dRes] = await Promise.all([
-        fetch("http://localhost:8000/reviews?tenant_id=tenant-demo"),
-        fetch("http://localhost:8000/documents?tenant_id=tenant-demo"),
+        fetch(`${BASE}/reviews?tenant_id=tenant-demo`),
+        fetch(`${BASE}/documents?tenant_id=tenant-demo`),
       ]);
       if (rRes.ok) {
         const data: Review[] = await rRes.json();
