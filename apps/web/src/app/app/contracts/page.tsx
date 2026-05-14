@@ -87,8 +87,8 @@ export default function ContractsPage() {
       }
       const headers = authHeaders();
       const [docsRes, revsRes] = await Promise.all([
-        fetch(`${BASE}/documents?tenant_id=${tid}`, { headers }),
-        fetch(`${BASE}/reviews?tenant_id=${tid}`, { headers }),
+        fetch(`${BASE}/documents`, { headers }),
+        fetch(`${BASE}/reviews?limit=10`, { headers }),
       ]);
 
       if (docsRes.ok) {

@@ -183,7 +183,7 @@ export default function ReviewPage() {
         while (!cancelled) {
           const BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
           const res = await fetch(
-            `${BASE}/reviews/${reviewId}?tenant_id=${tid}`,
+            `${BASE}/reviews/${reviewId}`,
             { headers: authHeaders() }
           );
           if (!res.ok) throw new Error("Review not found");

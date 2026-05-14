@@ -67,7 +67,7 @@ export default function HistoryPage() {
         setLoading(false);
         return;
       }
-      const params = new URLSearchParams({ tenant_id: tid });
+      const params = new URLSearchParams();
       if (statusFilter) params.set("status", statusFilter);
       if (typeFilter) params.set("review_type", typeFilter);
       if (searchQuery) params.set("search", searchQuery);

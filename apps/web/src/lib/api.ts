@@ -115,8 +115,8 @@ export const api = {
     }),
 
   /** Get a document by ID */
-  getDocument: (id: string, tenant_id: string) =>
-    request<DocumentResponse>(`/documents/${id}?tenant_id=${tenant_id}`),
+  getDocument: (id: string) =>
+    request<DocumentResponse>(`/documents/${id}`),
 
   // ── Reviews ──
 
@@ -133,14 +133,14 @@ export const api = {
     }),
 
   /** Poll for review results */
-  getReview: (id: string, tenant_id: string) =>
-    request<ReviewResponse>(`/reviews/${id}?tenant_id=${tenant_id}`),
+  getReview: (id: string) =>
+    request<ReviewResponse>(`/reviews/${id}`),
 
   /** Convenience: upload + review in one call, poll until done */
   async analyzeContract(
     text: string,
     filename: string = "contrato.txt",
-    tenant_id: string = "tenant-anon"
+    tenant_id: string
   ): Promise<ReviewResponse> {
     const doc = await this.createDocument({
       tenant_id,
@@ -159,7 +159,7 @@ export const api = {
     let current = review;
     while (current.status === "pending" || current.status === "in_progress") {
       await new Promise((r) => setTimeout(r, 1000));
-      current = await this.getReview(review.id, tenant_id);
+      current = await this.getReview(review.id);
     }
     return current;
   },

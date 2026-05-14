@@ -72,8 +72,8 @@ export default function DashboardPage() {
       const headers = authHeaders();
 
       const [rRes, sRes] = await Promise.all([
-        fetch(`${BASE}/reviews?tenant_id=${tid}&limit=10`, { headers }),
-        fetch(`${BASE}/reviews/stats?tenant_id=${tid}`, { headers }),
+        fetch(`${BASE}/reviews?limit=10`, { headers }),
+        fetch(`${BASE}/reviews/stats`, { headers }),
       ]);
 
       if (rRes.ok) {

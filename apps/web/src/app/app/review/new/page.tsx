@@ -123,7 +123,7 @@ export default function NewReviewPage() {
       while (current.status === "pending" || current.status === "in_progress") {
         await new Promise((r) => setTimeout(r, 1500));
         const pollRes = await fetch(
-          `${API_BASE}/reviews/${review.id}?tenant_id=${tid}`,
+          `${API_BASE}/reviews/${review.id}`,
           { headers: authHeaders() }
         );
         if (pollRes.ok) current = await pollRes.json();
