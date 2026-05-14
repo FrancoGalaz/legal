@@ -62,3 +62,47 @@ async def test_list_reviews():
     assert response.status_code == 200
     data = response.json()
     assert isinstance(data, list)
+
+
+@pytest.mark.asyncio
+async def test_review_stats():
+    """GET /reviews/stats returns aggregate statistics for a tenant."""
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        token = await get_auth_token(client)
+
+        # Create a document first
+        doc_resp = await client.post(
+            "/documents",
+            json={
+                "tenant_id": "tenant-test-1",
+                "filename": "stats_test.pdf",
+                "content_type": "application/pdf",
+                "text_content": "Test content for stats",
+            },
+            headers=auth_headers(token),
+        )
+        doc_id = doc_resp.json()["id"]
+
+        # Create a review
+        await client.post(
+            "/reviews",
+            json={
+                "tenant_id": "tenant-test-1",
+                "document_id": doc_id,
+                "review_type": "commercial",
+                "language": "es",
+            },
+            headers=auth_headers(token),
+        )
+
+        # Get stats
+        stats_resp = await client.get("/reviews/stats?tenant_id=tenant-test-1")
+    assert stats_resp.status_code == 200
+    stats = stats_resp.json()
+    assert "total_reviews" in stats
+    assert "pending" in stats
+    assert "risk_distribution" in stats
+    assert "type_distribution" in stats
+    assert "weekly_trend" in stats
+    assert stats["total_reviews"] >= 1

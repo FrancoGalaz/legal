@@ -145,7 +145,10 @@ class ReviewStore:
             .group_by(Review.review_type)
         )
         type_result = await self.session.execute(type_stmt)
-        stats.type_distribution = dict(type_result)
+        type_dist: dict[str, int] = {}
+        for review_type, count in type_result:
+            type_dist[review_type] = count
+        stats.type_distribution = type_dist
 
         # Weekly trend (last 8 weeks)
         now = datetime.now(timezone.utc)
