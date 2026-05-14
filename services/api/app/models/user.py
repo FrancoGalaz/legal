@@ -26,6 +26,9 @@ class User(Base):
         nullable=False,
     )
 
+    # Flow.cl payment fields
+    flow_subscription_id: Mapped[str | None] = mapped_column(String(255), nullable=True, default=None)
+
     @property
     def plan_label(self) -> str:
         return "Pro" if self.plan == "pro" else "Gratuito"

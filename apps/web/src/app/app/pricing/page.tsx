@@ -20,6 +20,15 @@ interface Plan {
   features: Feature[];
 }
 
+interface PlanInfo {
+  current_plan: string;
+  plan_label: string;
+  reviews_used: number;
+  reviews_limit: number | null;
+  reviews_remaining: number | null;
+  monthly_price_clp: number;
+}
+
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 function formatPrice(clp: number): string {
@@ -30,9 +39,9 @@ function formatPrice(clp: number): string {
 export default function PricingPage() {
   const { user, authHeaders } = useAuth();
   const [plans, setPlans] = useState<Plan[]>([]);
+  const [planInfo, setPlanInfo] = useState<PlanInfo | null>(null);
   const [loading, setLoading] = useState(true);
-  const [currentPlan, setCurrentPlan] = useState<string>("free");
-  const [upgrading, setUpgrading] = useState<string | null>(null);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   useEffect(() => {
@@ -40,12 +49,15 @@ export default function PricingPage() {
       try {
         const [plansRes, planRes] = await Promise.all([
           fetch(`${API_BASE}/pricing/plans`),
-          user ? fetch(`${API_BASE}/pricing/my-plan`, { headers: authHeaders() as Record<string, string> }).catch(() => null) : null,
+          user
+            ? fetch(`${API_BASE}/pricing/my-plan`, {
+                headers: authHeaders() as Record<string, string>,
+              }).catch(() => null)
+            : null,
         ]);
         if (plansRes.ok) setPlans(await plansRes.json());
         if (planRes && planRes.ok) {
-          const data = await planRes.json();
-          setCurrentPlan(data.current_plan);
+          setPlanInfo(await planRes.json());
         }
       } catch {
         // silent
@@ -56,7 +68,41 @@ export default function PricingPage() {
 
   const handleUpgrade = async (planId: string) => {
     if (!user) return;
-    setUpgrading(planId);
+
+    if (planId === "free") {
+      // Downgrade to free is direct (no payment needed)
+      await handleDirectUpgrade(planId);
+      return;
+    }
+
+    // Pro plan: create Flow checkout and redirect
+    setActionLoading(planId);
+    setMessage(null);
+    try {
+      const res = await fetch(`${API_BASE}/pricing/create-checkout`, {
+        method: "POST",
+        headers: {
+          ...(authHeaders() as Record<string, string>),
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ plan: planId }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        // Redirect user to Flow/Webpay checkout
+        window.location.href = data.payment_url;
+      } else {
+        const err = await res.json().catch(() => ({ detail: "Error al crear el pago" }));
+        setMessage({ type: "error", text: err.detail || "Error al crear el pago" });
+      }
+    } catch {
+      setMessage({ type: "error", text: "Error de conexión" });
+    }
+    setActionLoading(null);
+  };
+
+  const handleDirectUpgrade = async (planId: string) => {
+    setActionLoading(planId);
     setMessage(null);
     try {
       const res = await fetch(`${API_BASE}/pricing/upgrade`, {
@@ -69,9 +115,8 @@ export default function PricingPage() {
       });
       if (res.ok) {
         const data = await res.json();
-        setCurrentPlan(data.current_plan);
+        setPlanInfo(data);
         setMessage({ type: "success", text: `Plan actualizado a ${data.plan_label}` });
-        // Reload user data
         window.location.reload();
       } else {
         const err = await res.json().catch(() => ({ detail: "Error al actualizar plan" }));
@@ -80,8 +125,10 @@ export default function PricingPage() {
     } catch {
       setMessage({ type: "error", text: "Error de conexión" });
     }
-    setUpgrading(null);
+    setActionLoading(null);
   };
+
+  const currentPlanId = planInfo?.current_plan || "free";
 
   return (
     <div>
@@ -106,9 +153,32 @@ export default function PricingPage() {
           Planes y Precios
         </h1>
         <p style={{ fontSize: 14, color: "var(--navy-muted)", margin: 0, lineHeight: 1.5 }}>
-          Elige el plan que mejor se adapte a tus necesidades. Todos los planes incluyen análisis con IA especializada en derecho chileno.
+          Elige el plan que mejor se adapte a tus necesidades. Todos los planes incluyen análisis con IA
+          especializada en derecho chileno. Pago seguro vía Flow / Webpay.
         </p>
       </div>
+
+      {/* Usage info */}
+      {planInfo && planInfo.current_plan === "free" && (
+        <div
+          style={{
+            padding: "12px 16px",
+            borderRadius: 6,
+            marginBottom: 20,
+            fontSize: 13,
+            background: "rgba(37,99,235,0.08)",
+            color: "var(--tertiary)",
+            border: "1px solid rgba(37,99,235,0.15)",
+          }}
+        >
+          Has usado {planInfo.reviews_used} de {planInfo.reviews_limit} revisiones este mes.
+          {planInfo.reviews_remaining !== null && planInfo.reviews_remaining > 0
+            ? ` Te quedan ${planInfo.reviews_remaining}.`
+            : planInfo.reviews_remaining === 0
+            ? " Actualiza a Pro para seguir usando el servicio."
+            : ""}
+        </div>
+      )}
 
       {/* Message */}
       {message && (
@@ -121,7 +191,9 @@ export default function PricingPage() {
             fontWeight: 500,
             background: message.type === "success" ? "rgba(21,128,61,0.1)" : "rgba(159,18,57,0.1)",
             color: message.type === "success" ? "var(--risk-low)" : "var(--risk-high)",
-            border: `1px solid ${message.type === "success" ? "rgba(21,128,61,0.2)" : "rgba(159,18,57,0.2)"}`,
+            border: `1px solid ${
+              message.type === "success" ? "rgba(21,128,61,0.2)" : "rgba(159,18,57,0.2)"
+            }`,
           }}
         >
           {message.text}
@@ -136,8 +208,8 @@ export default function PricingPage() {
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))", gap: 24 }}>
           {plans.map((plan) => {
-            const isCurrent = currentPlan === plan.id;
-            const isFree = plan.id === "free";
+            const isCurrent = currentPlanId === plan.id;
+            const isPro = plan.id === "pro";
             return (
               <div
                 key={plan.id}
@@ -267,12 +339,12 @@ export default function PricingPage() {
                         fontWeight: 600,
                         fontSize: 13,
                         textDecoration: "none",
-                        background: isFree ? "var(--outline-variant)" : "var(--gold)",
-                        color: isFree ? "var(--on-surface)" : "#fff",
+                        background: isFree(plan) ? "var(--outline-variant)" : "var(--gold)",
+                        color: isFree(plan) ? "var(--on-surface)" : "#fff",
                         transition: "background 0.2s",
                       }}
                     >
-                      {isFree ? "Comenzar Gratis" : "Inicia Sesión"}
+                      {isFree(plan) ? "Comenzar Gratis" : "Inicia Sesión"}
                     </Link>
                   ) : isCurrent ? (
                     <div
@@ -286,12 +358,12 @@ export default function PricingPage() {
                         color: "var(--tertiary)",
                       }}
                     >
-                      {isFree ? "Plan actual — Gratuito" : "Plan actual — Pro"}
+                      {isPro ? "Plan actual — Pro" : "Plan actual — Gratuito"}
                     </div>
                   ) : (
                     <button
                       onClick={() => handleUpgrade(plan.id)}
-                      disabled={upgrading === plan.id}
+                      disabled={actionLoading === plan.id}
                       style={{
                         display: "block",
                         width: "100%",
@@ -301,28 +373,50 @@ export default function PricingPage() {
                         fontWeight: 600,
                         fontSize: 13,
                         border: "none",
-                        cursor: upgrading === plan.id ? "wait" : "pointer",
-                        background: isFree ? "var(--outline-variant)" : "var(--gold)",
-                        color: isFree ? "var(--on-surface)" : "#fff",
+                        cursor: actionLoading === plan.id ? "wait" : "pointer",
+                        background: isFree(plan) ? "var(--outline-variant)" : "var(--gold)",
+                        color: isFree(plan) ? "var(--on-surface)" : "#fff",
                         fontFamily: "inherit",
-                        opacity: upgrading === plan.id ? 0.6 : 1,
+                        opacity: actionLoading === plan.id ? 0.6 : 1,
                         transition: "background 0.2s",
                       }}
                       onMouseEnter={(e) => {
-                        if (!isFree && upgrading !== plan.id)
+                        if (!isFree(plan) && actionLoading !== plan.id)
                           e.currentTarget.style.background = "#8a6a20";
                       }}
                       onMouseLeave={(e) => {
-                        if (!isFree)
+                        if (!isFree(plan))
                           e.currentTarget.style.background = "var(--gold)";
                       }}
                     >
-                      {upgrading === plan.id
-                        ? "Actualizando..."
-                        : isFree
-                        ? "Degradar a Gratuito"
-                        : "Actualizar a Pro"}
+                      {actionLoading === plan.id
+                        ? "Procesando..."
+                        : isPro
+                        ? "Actualizar a Pro — $19.900/mes"
+                        : "Degradar a Gratuito"}
                     </button>
+                  )}
+
+                  {/* Payment method badge for Pro */}
+                  {isPro && !isCurrent && (
+                    <div
+                      style={{
+                        marginTop: 12,
+                        textAlign: "center",
+                        fontSize: 11,
+                        color: "var(--on-surface-variant)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 6,
+                      }}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                        <rect x="1" y="6" width="22" height="12" rx="2" />
+                        <line x1="1" y1="10" x2="23" y2="10" />
+                      </svg>
+                      Pago seguro vía Flow / Webpay — Tarjeta, débito o transferencia
+                    </div>
                   )}
                 </div>
               </div>
@@ -330,23 +424,10 @@ export default function PricingPage() {
           })}
         </div>
       )}
-
-      {/* Payment note */}
-      <div
-        style={{
-          marginTop: 28,
-          padding: 20,
-          background: "var(--surface-card)",
-          border: "1px solid var(--outline-variant)",
-          borderRadius: 8,
-          textAlign: "center",
-        }}
-      >
-        <p style={{ fontSize: 13, color: "var(--on-surface-variant)", margin: 0 }}>
-          Próximamente: integración con Flow y MercadoPago para pagos en Chile.
-          Mientras tanto, el cambio de plan es gratuito durante el período de prueba.
-        </p>
-      </div>
     </div>
   );
+}
+
+function isFree(plan: Plan): boolean {
+  return plan.id === "free";
 }

@@ -20,6 +20,13 @@ class Settings(BaseSettings):
     OPENAI_BASE_URL: str = "https://openrouter.ai/api/v1"
     LLM_MODEL: str = "deepseek/deepseek-v4-flash"
 
+    # Flow.cl payment gateway — https://www.flow.cl/
+    FLOW_API_KEY: str = ""
+    FLOW_SECRET_KEY: str = ""
+    FLOW_BASE_URL: str = "https://www.flow.cl/api"
+    FLOW_RETURN_URL: str = "http://localhost:3000/app/payment/return"
+    FLOW_CONFIRMATION_URL: str = "http://localhost:8000/pricing/flow-webhook"
+
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8", "extra": "ignore"}
 
 

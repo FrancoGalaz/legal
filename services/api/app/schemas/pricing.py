@@ -1,4 +1,5 @@
 from typing import Optional
+
 from pydantic import BaseModel, Field
 
 
@@ -54,7 +55,7 @@ PLANS: dict[str, PricingPlan] = {
             PricingPlanFeature(text="Historial completo"),
             PricingPlanFeature(text="Soporte prioritario 24/7"),
             PricingPlanFeature(text="API access"),
-            PricingPlanFeature(text="Integración con Flow (próximamente)"),
+            PricingPlanFeature(text="Pago seguro vía Flow / Webpay"),
         ],
     ),
 }
@@ -72,3 +73,22 @@ class PlanInfoResponse(BaseModel):
 
 class UpgradeRequest(BaseModel):
     plan: str = Field(..., description="Plan ID: 'pro' or 'free'")
+
+
+# ── Payment / Flow schemas ──────────────────────────────
+
+
+class CheckoutRequest(BaseModel):
+    plan: str = Field(..., description="Plan ID to purchase: 'pro'")
+
+
+class CheckoutResponse(BaseModel):
+    payment_url: str
+    flow_order: str
+    expires_at: Optional[str] = None
+
+
+class PaymentStatusResponse(BaseModel):
+    status: str  # "approved", "pending", "rejected", "cancelled"
+    plan: str
+    message: str
