@@ -17,7 +17,11 @@ export default function LoginPage() {
 
   // If already logged in, redirect to dashboard
   if (user && !loading) {
-    router.replace("/app/dashboard");
+    try {
+      router.replace("/app/dashboard");
+    } catch {
+      window.location.href = "/legal/app/dashboard";
+    }
     return null;
   }
 
@@ -37,6 +41,14 @@ export default function LoginPage() {
       setError(err.message || "Error inesperado");
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const navigateTo = (path: string) => {
+    try {
+      router.push(path);
+    } catch {
+      window.location.href = "/legal" + path;
     }
   };
 
@@ -264,7 +276,7 @@ export default function LoginPage() {
               ¿Eres un estudio jurídico?
             </p>
             <button
-              onClick={() => router.push("/app/onboarding")}
+              onClick={() => navigateTo("/app/onboarding")}
               style={{
                 background: "none",
                 border: "1px solid var(--gold)",

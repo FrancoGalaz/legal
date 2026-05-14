@@ -100,7 +100,12 @@ function AppLayoutInner({ children }: { children: React.ReactNode }) {
   // Auth guard — redirect to login if not authenticated
   useEffect(() => {
     if (!loading && !user) {
-      router.replace("/app/login");
+      try {
+        router.replace("/app/login");
+      } catch {
+        // Fallback for static export (router.replace not available)
+        window.location.href = "/legal/app/login";
+      }
     }
   }, [loading, user, router]);
 
