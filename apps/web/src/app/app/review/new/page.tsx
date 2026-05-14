@@ -2,6 +2,7 @@
 
 import { useState, useRef, type DragEvent } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -17,6 +18,7 @@ export default function NewReviewPage() {
   const [progressMsg, setProgressMsg] = useState("");
   const [dragOver, setDragOver] = useState(false);
   const [contractType, setContractType] = useState("commercial");
+  const [needsAuth, setNeedsAuth] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const isPdf = fileName.toLowerCase().endsWith(".pdf") || fileName.toLowerCase().endsWith(".docx");
@@ -50,6 +52,12 @@ export default function NewReviewPage() {
 
   const handleAnalyze = async () => {
     if (!text.trim() && !fileObj) return;
+    const tid = user?.tenant_id;
+    if (!tid) {
+      setNeedsAuth(true);
+      setErrorMsg("Debes iniciar sesión para analizar contratos.");
+      return;
+    }
     setStatus("analyzing");
     setErrorMsg("");
     setProgressMsg("Preparando documento...");
@@ -62,7 +70,7 @@ export default function NewReviewPage() {
         // Upload raw file — backend extracts text
         setProgressMsg("Extrayendo texto del archivo...");
         const formData = new FormData();
-        formData.append("tenant_id", user?.tenant_id || "tenant-demo");
+        formData.append("tenant_id", tid);
         formData.append("file", fileObj);
 
         const uploadRes = await fetch(`${API_BASE}/documents/upload`, {
@@ -83,7 +91,7 @@ export default function NewReviewPage() {
           method: "POST",
           headers: authHeaders(),
           body: JSON.stringify({
-            tenant_id: user?.tenant_id || "tenant-demo",
+            tenant_id: tid,
             filename: fileName || "contrato.txt",
             content_type: "text/plain",
             text_content: text,
@@ -100,7 +108,7 @@ export default function NewReviewPage() {
         method: "POST",
         headers: authHeaders(),
         body: JSON.stringify({
-          tenant_id: user?.tenant_id || "tenant-demo",
+          tenant_id: tid,
           document_id: docId,
           review_type: contractType,
           language: "es",
@@ -115,7 +123,7 @@ export default function NewReviewPage() {
       while (current.status === "pending" || current.status === "in_progress") {
         await new Promise((r) => setTimeout(r, 1500));
         const pollRes = await fetch(
-          `${API_BASE}/reviews/${review.id}?tenant_id=${user?.tenant_id || "tenant-demo"}`,
+          `${API_BASE}/reviews/${review.id}?tenant_id=${tid}`,
           { headers: authHeaders() }
         );
         if (pollRes.ok) current = await pollRes.json();
@@ -277,6 +285,44 @@ export default function NewReviewPage() {
       </div>
 
       {/* Status */}
+      {needsAuth && (
+        <div
+          style={{
+            background: "rgba(217,119,6,0.1)",
+            border: "1px solid var(--gold)",
+            borderRadius: 8,
+            padding: "16px 20px",
+            marginBottom: 12,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: 12,
+          }}
+        >
+          <span style={{ fontSize: 13, color: "var(--on-surface)" }}>
+            ⚠️ {errorMsg || "Debes iniciar sesión para analizar contratos."}
+          </span>
+          <Link
+            href="/app/login"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              padding: "8px 16px",
+              background: "var(--gold)",
+              color: "#fff",
+              borderRadius: 6,
+              fontWeight: 600,
+              fontSize: 12,
+              textDecoration: "none",
+            }}
+          >
+            Iniciar Sesión
+          </Link>
+        </div>
+      )}
+
       {status === "analyzing" && (
         <div
           style={{

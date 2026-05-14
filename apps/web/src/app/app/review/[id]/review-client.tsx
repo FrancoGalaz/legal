@@ -163,6 +163,7 @@ export default function ReviewPage() {
   const [review, setReview] = useState<Review | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [needsAuth, setNeedsAuth] = useState(false);
   const { user, authHeaders } = useAuth();
 
   useEffect(() => {
@@ -170,10 +171,19 @@ export default function ReviewPage() {
 
     const poll = async () => {
       try {
+        const tid = user?.tenant_id;
+        if (!tid) {
+          if (!cancelled) {
+            setNeedsAuth(true);
+            setLoading(false);
+          }
+          return;
+        }
+
         while (!cancelled) {
           const BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
           const res = await fetch(
-            `${BASE}/reviews/${reviewId}?tenant_id=${user?.tenant_id || "tenant-demo"}`,
+            `${BASE}/reviews/${reviewId}?tenant_id=${tid}`,
             { headers: authHeaders() }
           );
           if (!res.ok) throw new Error("Review not found");
@@ -199,6 +209,17 @@ export default function ReviewPage() {
       cancelled = true;
     };
   }, [reviewId]);
+
+  if (needsAuth) {
+    return (
+      <div style={{ textAlign: "center", padding: 48 }}>
+        <p style={{ color: "var(--gold)", fontSize: 14, marginBottom: 16 }}>⚠️ Debes iniciar sesión para ver los resultados.</p>
+        <Link href="/app/login" style={{ color: "var(--gold)", fontWeight: 600, fontSize: 14 }}>
+          Iniciar Sesión
+        </Link>
+      </div>
+    );
+  }
 
   if (loading && !review) {
     return (
