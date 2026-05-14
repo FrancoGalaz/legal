@@ -216,7 +216,7 @@ async def test_get_document_by_id():
         )
         document_id = doc_resp.json()["id"]
 
-        get_resp = await client.get(f"/documents/{document_id}?tenant_id=tenant-test-1")
+        get_resp = await client.get(f"/documents/{document_id}?tenant_id=tenant-test-1", headers=headers)
 
     assert get_resp.status_code == 200
     data = get_resp.json()
@@ -229,7 +229,9 @@ async def test_get_document_by_id():
 async def test_get_document_not_found():
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
-        get_resp = await client.get("/documents/nonexistent?tenant_id=tenant-test-1")
+        token = await get_auth_token(client)
+        headers = auth_headers(token)
+        get_resp = await client.get("/documents/nonexistent?tenant_id=tenant-test-1", headers=headers)
 
     assert get_resp.status_code == 404
     assert get_resp.json()["detail"] == "Document not found"

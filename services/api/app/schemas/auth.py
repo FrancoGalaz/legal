@@ -38,3 +38,4 @@ class UserWithPlanResponse(UserResponse):
     plan_limit: int = 3
     reviews_remaining: int = 3
     tenant_name: Optional[str] = None
+    tenant_id: str = "default"

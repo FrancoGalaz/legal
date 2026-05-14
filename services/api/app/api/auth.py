@@ -110,4 +110,5 @@ async def get_me(
         plan_limit=plan.reviews_limit or 999,
         reviews_remaining=plan.reviews_remaining or 999,
         tenant_name=tenant_name,
+        tenant_id=current_user.tenant_id,
     )
