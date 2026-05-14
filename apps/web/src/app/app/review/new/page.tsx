@@ -3,6 +3,8 @@
 import { useState, useRef, type DragEvent } from "react";
 import { useRouter } from "next/navigation";
 
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
 export default function NewReviewPage() {
   const router = useRouter();
   const [text, setText] = useState("");
@@ -60,7 +62,7 @@ export default function NewReviewPage() {
         formData.append("tenant_id", "tenant-demo");
         formData.append("file", fileObj);
 
-        const uploadRes = await fetch("http://localhost:8000/documents/upload", {
+        const uploadRes = await fetch(`${API_BASE}/documents/upload`, {
           method: "POST",
           body: formData,
         });
@@ -73,7 +75,7 @@ export default function NewReviewPage() {
       } else {
         // Send pasted text or .txt content
         setProgressMsg("Enviando documento...");
-        const docRes = await fetch("http://localhost:8000/documents", {
+        const docRes = await fetch(`${API_BASE}/documents`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -90,7 +92,7 @@ export default function NewReviewPage() {
 
       // 2. Start analysis
       setProgressMsg("Iniciando análisis con IA...");
-      const revRes = await fetch("http://localhost:8000/reviews", {
+      const revRes = await fetch(`${API_BASE}/reviews`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -109,7 +111,7 @@ export default function NewReviewPage() {
       while (current.status === "pending" || current.status === "in_progress") {
         await new Promise((r) => setTimeout(r, 1500));
         const pollRes = await fetch(
-          `http://localhost:8000/reviews/${review.id}?tenant_id=tenant-demo`
+          `${API_BASE}/reviews/${review.id}?tenant_id=tenant-demo`
         );
         if (pollRes.ok) current = await pollRes.json();
       }

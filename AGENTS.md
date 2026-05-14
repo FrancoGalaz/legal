@@ -12,35 +12,37 @@ GitHub Pages: https://francogalaz.github.io/legal (NEXT_OUTPUT=export, base path
 - **No romper el build**: `pnpm build` y `pytest` deben pasar antes de commitear.
 - **Design system**: usar tokens de DESIGN.md, no hex literals.
 
-## Current State (2026-05-13)
-- API: FastAPI funcional con endpoints /documents, /reviews, /health. SQLAlchemy models listos.
-- Frontend: Next.js 14 con landing page estática (preview.html, stitch-landing-v2.html).
-- Build: `/apps/web/out/` generado, listo para deploy.
-- CI/CD: GitHub Actions deploy-pages.yml configurado pero necesita token con permiso Actions: Read and write.
-- Despliegue pendiente: el build estático existe pero no se ha deployado a GitHub Pages.
+## Current State (2026-05-14)
+- **Fase 1 COMPLETA**: Landing page premium con responsive, waitlist form, CI/CD deploy-pages.yml funcional.
+- **GitHub Pages LIVE**: https://francogalaz.github.io/legal/ — HTTP 200, incluye waitlist.
+- **Fase 2 (App Funcional) casi completa**: dashboard, contracts, history, review/new, review/[id] pages.
+- **Fase 3 (AI Core) parcial**: LLMService con OpenRouter, prompts de derecho chileno, análisis background.
+- **Backend FastAPI**: endpoints /documents, /reviews, /documents/upload, /health con SQLAlchemy async.
+- **Auth pendiente**: falta Clerk/NextAuth para multi-tenant real.
+- **API URL**: usa `NEXT_PUBLIC_API_URL` como env var para apuntar al backend.
 
 ## Roadmap (orden de prioridad)
 
-### Fase 1 — Landing + Deploy (AHORA)
-1. Hacer push del build estático a GitHub Pages (verificar token y workflow)
-2. Mejorar landing page con diseño responsive y contenido real (usar DESIGN.md tokens)
-3. Agregar formulario de waitlist/contacto
-
-### Fase 2 — App Funcional
-4. Crear páginas de la app: login, dashboard, upload de documentos, resultados de revisión
-5. Conectar frontend con API backend (llamar /documents, /reviews desde el frontend)
-6. Implementar autenticación (Clerk o NextAuth con proveedor OAuth)
-7. Subida de archivos PDF/DOCX con progress bar
+### Fase 2 — App Funcional (CONTINUAR)
+4. ✅ Crear páginas de la app: login, dashboard, upload de documentos, resultados de revisión
+5. ✅ Conectar frontend con API backend (llamar /documents, /reviews desde el frontend)
+6. ❌ **Implementar autenticación (Clerk o NextAuth con proveedor OAuth)** — PRÓXIMO
+7. ✅ Subida de archivos PDF/DOCX con drag-and-drop y progress bar
 
 ### Fase 3 — AI Core
-8. Integrar LLM real para revisión de contratos (OpenRouter)
-9. Templates de prompts para derecho chileno (comercial, laboral, corporativo)
-10. Dashboard con historial de revisiones y métricas
+8. ✅ Integrar LLM real para revisión de contratos (OpenRouter)
+9. ⚠️ Templates de prompts específicos por tipo de contrato (comercial, laboral, corporativo)
+10. ❌ Dashboard con historial de revisiones y métricas avanzadas (parcialmente hecho)
 
 ### Fase 4 — Monetización
-11. Pricing tiers (freemium + pro)
-12. Pasarela de pago (Flow o MercadoPago Chile)
-13. Onboarding multi-tenant para estudios jurídicos
+11. ❌ Pricing tiers (freemium + pro)
+12. ❌ Pasarela de pago (Flow o MercadoPago Chile)
+13. ❌ Onboarding multi-tenant para estudios jurídicos
+
+### Fase 1 — Landing + Deploy (COMPLETADA)
+1. ✅ Push del build estático a GitHub Pages (funcionando con deploy-pages.yml)
+2. ✅ Landing page con diseño responsive y contenido real (usando DESIGN.md tokens)
+3. ✅ Formulario de waitlist/contacto
 
 ## Environment
 - Node >= 18, pnpm 10+
@@ -53,8 +55,8 @@ GitHub Pages: https://francogalaz.github.io/legal (NEXT_OUTPUT=export, base path
 # Frontend
 cd /home/pcagente/Documentos/Legal/legal-agent-cl
 pnpm install
-pnpm dev:web          # desarrollo en :3000
 pnpm build:web        # build estático a apps/web/out
+cd apps/web && /home/pcagente/.npm-global/bin/pnpm build  # workaround si npm está roto
 
 # Backend
 cd services/api
@@ -80,3 +82,6 @@ Ver DESIGN.md en raíz. Tokens principales:
 - Token fine-grained de GitHub necesita permiso Actions: Read and write.
 - `apps/web/pnpm-lock.yaml` está untracked — no debe commitearse (está en .gitignore implícito, verificar).
 - NEXT_OUTPUT=export requiere que todas las rutas sean static-friendly (no APIs, no middleware dinámico).
+- npm/npx del sistema está roto (Node 24) — usar `pnpm` directamente o `/home/pcagente/.npm-global/bin/pnpm`.
+- `apps/web/src/app/app/review/new/page.tsx` tiene URLs hardcodeadas `http://localhost:8000` — reemplazar con `process.env.NEXT_PUBLIC_API_URL`.
+- LLM necesita `OPENROUTER_API_KEY` en `.env` para funcionar.
