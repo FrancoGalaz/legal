@@ -8,9 +8,9 @@
     "packages/*"
   ],
   "scripts": {
-    "dev:web": "npm run dev -w apps/web",
+    "dev:web": "cd apps/web && pnpm dev",
     "dev:api": "cd services/api && uvicorn app.main:app --reload --port 8000",
-    "build:web": "npm run build -w apps/web",
+    "build:web": "cd apps/web && pnpm build",
     "lint": "echo 'no linters configured yet'",
     "typecheck": "echo 'no typecheck configured yet'"
   },
