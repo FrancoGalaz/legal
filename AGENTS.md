@@ -18,12 +18,15 @@ GitHub Pages: https://francogalaz.github.io/legal (NEXT_OUTPUT=export, base path
 - **Fase 2 (App Funcional) COMPLETA**: dashboard, contracts, history, review/new, review/[id] pages.
 - **Fase 3 (AI Core) COMPLETA**: LLMService con OpenRouter, prompts de derecho chileno específicos por tipo, dashboard con métricas avanzadas (distribución riesgo, tipo, tendencia semanal), historial con filtros y búsqueda por nombre de archivo.
 - **Auth implementada (JWT)**: login/registro en frontend + backend con JWT, User model en DB, proteccion de rutas cliente-side.
+- **Aislamiento multi-tenant**: cada usuario registrado obtiene un tenant único automáticamente — no más tenant compartido "tenant-demo". El onboarding multi-tenant también crea tenants aislados.
 - **Backend FastAPI**: endpoints /auth/register, /auth/login, /auth/me, /documents, /reviews, /reviews/stats, /documents/upload, /health, /pricing/plans, /pricing/my-plan, /pricing/upgrade con SQLAlchemy async y JOIN optimizado.
 - **API URL**: todas las paginas usan `NEXT_PUBLIC_API_URL` en vez de URLs hardcodeadas.
+- **Error handling visible**: todas las páginas tienen estados needsAuth, error, loading. Sin valores hardcodeados "tenant-demo" — se reemplazaron por guards con redirect a login.
 - **Pricing Tiers implementado**: modelo plan en User (free/pro), limites de uso (free: 3 revisiones/mes), enforce en POST /reviews, pagina /app/pricing con planes y upgrade.
 - **JWT_SECRET_KEY generado**: clave segura configurada en .env (reemplazo del default "change-me-in-production").
 - **.env.example actualizado**: incluye documentacion completa de JWT, Flow.cl, CORS, DB y LLM.
 - **Todo el roadmap (items 1-13) esta COMPLETO**: landing, app funcional, auth, AI core, pricing, Flow.cl, multi-tenant.
+- **41 tests automatizados**: auth (register/auto-tenant/login/me), documents, health, LLM prompts, pricing, reviews, review flow.
 
 ## Roadmap (orden de prioridad)
 
