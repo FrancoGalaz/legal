@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Review {
   id: string;
@@ -42,6 +43,7 @@ const TYPE_LABELS: Record<string, string> = {
 };
 
 export default function DashboardPage() {
+  const { user } = useAuth();
   const [reviews, setReviews] = useState<Review[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -226,6 +228,55 @@ export default function DashboardPage() {
           </div>
         ))}
       </div>
+
+      {/* ─── Plan Usage Card (free users) ─── */}
+      {user && user.plan === "free" && (
+        <div
+          style={{
+            background: "var(--surface-card)",
+            border: "1px solid var(--outline-variant)",
+            borderRadius: 8,
+            padding: "16px 20px",
+            marginBottom: 28,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: 12,
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <span style={{ fontSize: 13, color: "var(--on-surface)" }}>
+              Plan Gratuito ·{" "}
+              {user.reviews_remaining !== undefined && (
+                <strong style={{ color: "var(--gold)" }}>
+                  {user.reviews_remaining} de {user.plan_limit} revisiones disponibles
+                </strong>
+              )}
+            </span>
+          </div>
+          <Link
+            href="/app/pricing"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              padding: "8px 16px",
+              background: "var(--gold)",
+              color: "#fff",
+              borderRadius: 6,
+              fontWeight: 600,
+              fontSize: 12,
+              textDecoration: "none",
+              transition: "background 0.2s",
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = "#8a6a20")}
+            onMouseLeave={(e) => (e.currentTarget.style.background = "var(--gold)")}
+          >
+            Actualizar a Pro
+          </Link>
+        </div>
+      )}
 
       {/* ─── Charts Row ─── */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, marginBottom: 28 }}>

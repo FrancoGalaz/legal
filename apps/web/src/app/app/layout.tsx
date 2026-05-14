@@ -25,6 +25,12 @@ const NAV_SECTIONS = [
       { href: "/app/history", label: "Historial", icon: "Clock" },
     ],
   },
+  {
+    label: "Cuenta",
+    items: [
+      { href: "/app/pricing", label: "Planes", icon: "CreditCard" },
+    ],
+  },
 ];
 
 // SVG icons inline
@@ -58,6 +64,12 @@ function Icon({ name }: { name: string }) {
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="10" />
         <polyline points="12 6 12 12 16 14" />
+      </svg>
+    ),
+    CreditCard: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+        <line x1="1" y1="10" x2="23" y2="10" />
       </svg>
     ),
   };
@@ -358,7 +370,21 @@ function AppLayoutInner({ children }: { children: React.ReactNode }) {
                   {user.name}
                 </span>
                 <span style={{ fontSize: 11, color: "var(--navy-muted)" }}>
-                  Plan Gratuito
+                  {user.plan_label === "Pro" ? (
+                    <span style={{ color: "var(--gold)", fontWeight: 600 }}>
+                      ⭐ Pro
+                    </span>
+                  ) : (
+                    <>
+                      Plan Gratuito ·{" "}
+                      <Link
+                        href="/app/pricing"
+                        style={{ color: "var(--gold)", textDecoration: "none", fontWeight: 500 }}
+                      >
+                        Actualizar
+                      </Link>
+                    </>
+                  )}
                 </span>
               </div>
             </div>

@@ -17,6 +17,11 @@ export interface User {
   name: string;
   is_active: boolean;
   created_at: string;
+  plan: string;
+  plan_label: string;
+  plan_limit: number;
+  reviews_used_this_period: number;
+  reviews_remaining: number;
 }
 
 interface AuthContextType {
