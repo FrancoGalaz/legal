@@ -119,7 +119,10 @@ async def test_get_review_after_analysis():
             await store.update_status(review_id, "tenant-test-1", "completed", result)
 
         # Get the review
-        get_resp = await client.get(f"/reviews/{review_id}?tenant_id=tenant-test-1")
+        get_resp = await client.get(
+            f"/reviews/{review_id}",
+            headers=headers,
+        )
 
     assert get_resp.status_code == 200
     data = get_resp.json()

@@ -42,7 +42,11 @@ async def test_create_review():
 async def test_get_review():
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
-        response = await client.get("/reviews/test-id?tenant_id=tenant-test-1")
+        token = await get_auth_token(client)
+        response = await client.get(
+            "/reviews/test-id",
+            headers=auth_headers(token),
+        )
     assert response.status_code == 404
 
 
@@ -50,7 +54,11 @@ async def test_get_review():
 async def test_get_review_not_found():
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
-        response = await client.get("/reviews/nonexistent?tenant_id=tenant-test-1")
+        token = await get_auth_token(client)
+        response = await client.get(
+            "/reviews/nonexistent",
+            headers=auth_headers(token),
+        )
     assert response.status_code == 404
 
 
@@ -58,7 +66,11 @@ async def test_get_review_not_found():
 async def test_list_reviews():
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
-        response = await client.get("/reviews?tenant_id=tenant-test-1")
+        token = await get_auth_token(client)
+        response = await client.get(
+            "/reviews",
+            headers=auth_headers(token),
+        )
     assert response.status_code == 200
     data = response.json()
     assert isinstance(data, list)
@@ -97,7 +109,10 @@ async def test_review_stats():
         )
 
         # Get stats
-        stats_resp = await client.get("/reviews/stats?tenant_id=tenant-test-1")
+        stats_resp = await client.get(
+            "/reviews/stats",
+            headers=auth_headers(token),
+        )
     assert stats_resp.status_code == 200
     stats = stats_resp.json()
     assert "total_reviews" in stats

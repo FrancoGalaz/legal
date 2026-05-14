@@ -51,6 +51,9 @@ async def create_review(
     # Enforce plan limits before creating review
     await check_review_limit(current_user)
 
+    # Ensure tenant_id matches the authenticated user
+    req.tenant_id = current_user.tenant_id
+
     store = ReviewStore(session)
     review = await store.create(req)
     background_tasks.add_task(_run_analysis, review.id, req.document_id, req.tenant_id, req.review_type)
@@ -64,26 +67,26 @@ async def create_review(
 
 @router.get("/stats", response_model=ReviewStats)
 async def get_review_stats(
-    tenant_id: str = Query(..., description="ID del tenant"),
     session: AsyncSession = Depends(get_async_session),
+    current_user: User = Depends(get_current_user),
 ):
     store = ReviewStore(session)
-    return await store.get_stats(tenant_id)
+    return await store.get_stats(current_user.tenant_id)
 
 
 @router.get("", response_model=list[ReviewResponse])
 async def list_reviews(
-    tenant_id: str = Query(..., description="ID del tenant"),
     status: str | None = Query(None, description="Filtrar por estado: pending, completed, failed"),
     review_type: str | None = Query(None, description="Filtrar por tipo: commercial, laboral, corporate"),
     search: str | None = Query(None, description="Buscar por nombre de archivo"),
     limit: int = Query(50, ge=1, le=200, description="Máximo de resultados"),
     offset: int = Query(0, ge=0, description="Offset para paginación"),
     session: AsyncSession = Depends(get_async_session),
+    current_user: User = Depends(get_current_user),
 ):
     store = ReviewStore(session)
     return await store.list_by_tenant(
-        tenant_id,
+        current_user.tenant_id,
         status=status,
         review_type=review_type,
         search=search,
@@ -95,11 +98,11 @@ async def list_reviews(
 @router.get("/{review_id}", response_model=ReviewResponse)
 async def get_review(
     review_id: str,
-    tenant_id: str = Query(..., description="ID del tenant"),
     session: AsyncSession = Depends(get_async_session),
+    current_user: User = Depends(get_current_user),
 ):
     store = ReviewStore(session)
-    review = await store.get_by_id(review_id, tenant_id)
+    review = await store.get_by_id(review_id, current_user.tenant_id)
     if not review:
         raise HTTPException(status_code=404, detail="Review not found")
     return review
