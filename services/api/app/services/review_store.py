@@ -1,6 +1,5 @@
 import json
 import uuid
-from collections import Counter
 from datetime import datetime, timedelta, timezone
 
 from sqlalchemy.ext.asyncio import AsyncSession

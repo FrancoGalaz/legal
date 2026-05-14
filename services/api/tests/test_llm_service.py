@@ -3,7 +3,7 @@ import pytest
 from unittest.mock import AsyncMock, Mock, patch
 
 from app.services.llm_service import LLMService, PROMPT_TEMPLATES
-from app.schemas.review_schemas import AnalysisResult, ClauseAnalysis
+from app.schemas.review_schemas import AnalysisResult
 
 
 @pytest.fixture

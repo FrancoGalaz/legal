@@ -1,7 +1,7 @@
 import logging
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, Form, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import PlainTextResponse
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -215,7 +215,6 @@ async def flow_webhook(
     We verify authenticity via hash, then activate the Pro plan for the user.
     """
     form = await request.form()
-    api_key = form.get("apiKey", "")
     flow_order = form.get("flowOrder", "")
     token = form.get("token", "")
 
