@@ -18,8 +18,9 @@ GitHub Pages: https://francogalaz.github.io/legal (NEXT_OUTPUT=export, base path
 - **Fase 2 (App Funcional) COMPLETA**: dashboard, contracts, history, review/new, review/[id] pages.
 - **Fase 3 (AI Core) COMPLETA**: LLMService con OpenRouter, prompts de derecho chileno específicos por tipo, dashboard con métricas avanzadas (distribución riesgo, tipo, tendencia semanal), historial con filtros y búsqueda por nombre de archivo.
 - **Auth implementada (JWT)**: login/registro en frontend + backend con JWT, User model en DB, proteccion de rutas cliente-side.
-- **Backend FastAPI**: endpoints /auth/register, /auth/login, /auth/me, /documents, /reviews, /reviews/stats, /documents/upload, /health con SQLAlchemy async y JOIN optimizado.
+- **Backend FastAPI**: endpoints /auth/register, /auth/login, /auth/me, /documents, /reviews, /reviews/stats, /documents/upload, /health, /pricing/plans, /pricing/my-plan, /pricing/upgrade con SQLAlchemy async y JOIN optimizado.
 - **API URL**: todas las paginas usan `NEXT_PUBLIC_API_URL` en vez de URLs hardcodeadas.
+- **Pricing Tiers implementado**: modelo plan en User (free/pro), limites de uso (free: 3 revisiones/mes), enforce en POST /reviews, pagina /app/pricing con planes y upgrade.
 
 ## Roadmap (orden de prioridad)
 
@@ -35,7 +36,7 @@ GitHub Pages: https://francogalaz.github.io/legal (NEXT_OUTPUT=export, base path
 10. ✅ Dashboard con historial de revisiones y métricas avanzadas (riesgo, tipo, tendencia semanal)
 
 ### Fase 4 — Monetización
-11. ❌ Pricing tiers (freemium + pro)
+11. ✅ Pricing tiers (freemium + pro) — plan en User, limites (free: 3/mes), pagina de planes, upgrade/downgrade via API
 12. ❌ Pasarela de pago (Flow o MercadoPago Chile)
 13. ❌ Onboarding multi-tenant para estudios jurídicos
 
@@ -85,3 +86,5 @@ Ver DESIGN.md en raíz. Tokens principales:
 - npm/npx del sistema está roto (Node 24) — usar `pnpm` directamente o `/home/pcagente/.npm-global/bin/pnpm`.
 - `apps/web/src/app/app/review/new/page.tsx` ya usa `NEXT_PUBLIC_API_URL` (revisar que las demas paginas tambien)
 - LLM necesita `OPENROUTER_API_KEY` en `.env` para funcionar.
+- Pricing DB schema: `plan`, `reviews_used_this_period`, `plan_period_start` columnas nuevas en User. Se crean con `init_db()` si no existen. Para migrar DB existente, agregar columnas manualmente o dropear la DB y recrear.
+- Test DB `test_legal_agent.db` se recrea en cada test run -- no commitear.
