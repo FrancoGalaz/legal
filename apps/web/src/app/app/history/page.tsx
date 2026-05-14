@@ -48,6 +48,8 @@ const STATUS_LABELS: Record<string, string> = {
 export default function HistoryPage() {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+  const [needsAuth, setNeedsAuth] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
@@ -55,9 +57,16 @@ export default function HistoryPage() {
 
   const load = useCallback(async () => {
     setLoading(true);
+    setFetchError(null);
+    setNeedsAuth(false);
     try {
       const BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-      const tid = user?.tenant_id || "tenant-demo";
+      const tid = user?.tenant_id;
+      if (!tid) {
+        setNeedsAuth(true);
+        setLoading(false);
+        return;
+      }
       const params = new URLSearchParams({ tenant_id: tid });
       if (statusFilter) params.set("status", statusFilter);
       if (typeFilter) params.set("review_type", typeFilter);
@@ -69,9 +78,11 @@ export default function HistoryPage() {
       if (res.ok) {
         const data = await res.json();
         setReviews(Array.isArray(data) ? data : []);
+      } else if (res.status === 401) {
+        setNeedsAuth(true);
       }
     } catch {
-      // silently fail
+      setFetchError("Error de conexión con el servidor.");
     }
     setLoading(false);
   }, [statusFilter, typeFilter, searchQuery, user?.tenant_id, authHeaders]);
@@ -163,6 +174,61 @@ export default function HistoryPage() {
           ))}
         </select>
       </div>
+
+      {/* ─── Error States ─── */}
+      {needsAuth && (
+        <div
+          style={{
+            background: "rgba(217,119,6,0.1)",
+            border: "1px solid var(--gold)",
+            borderRadius: 8,
+            padding: "16px 20px",
+            marginBottom: 20,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: 12,
+          }}
+        >
+          <span style={{ fontSize: 13, color: "var(--on-surface)" }}>
+            ⚠️ Sesión no encontrada.
+          </span>
+          <Link
+            href="/app/login"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              padding: "8px 16px",
+              background: "var(--gold)",
+              color: "#fff",
+              borderRadius: 6,
+              fontWeight: 600,
+              fontSize: 12,
+              textDecoration: "none",
+            }}
+          >
+            Iniciar Sesión
+          </Link>
+        </div>
+      )}
+
+      {fetchError && (
+        <div
+          style={{
+            background: "rgba(159,18,57,0.08)",
+            border: "1px solid var(--risk-high)",
+            borderRadius: 8,
+            padding: "16px 20px",
+            marginBottom: 20,
+          }}
+        >
+          <span style={{ fontSize: 13, color: "var(--risk-high)", display: "flex", alignItems: "center", gap: 8 }}>
+            ⚠️ {fetchError}
+          </span>
+        </div>
+      )}
 
       {/* ─── List ─── */}
       {loading && (

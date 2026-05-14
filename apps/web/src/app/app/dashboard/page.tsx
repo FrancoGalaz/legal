@@ -42,17 +42,33 @@ const TYPE_LABELS: Record<string, string> = {
   corporate: "Corporativo",
 };
 
+function getGreeting(): string {
+  const h = new Date().getHours();
+  if (h < 12) return "Buenos días";
+  if (h < 19) return "Buenas tardes";
+  return "Buenas noches";
+}
+
 export default function DashboardPage() {
   const { user, authHeaders } = useAuth();
   const [reviews, setReviews] = useState<Review[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+  const [needsAuth, setNeedsAuth] = useState(false);
 
   const load = async () => {
     setLoading(true);
+    setFetchError(null);
+    setNeedsAuth(false);
     try {
       const BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-      const tid = user?.tenant_id || "tenant-demo";
+      const tid = user?.tenant_id;
+      if (!tid) {
+        setNeedsAuth(true);
+        setLoading(false);
+        return;
+      }
       const headers = authHeaders();
 
       const [rRes, sRes] = await Promise.all([
@@ -67,12 +83,16 @@ export default function DashboardPage() {
             new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
         );
         setReviews(data);
+      } else if (rRes.status === 401) {
+        setNeedsAuth(true);
       }
       if (sRes.ok) {
         setStats(await sRes.json());
+      } else if (sRes.status === 401) {
+        setNeedsAuth(true);
       }
     } catch {
-      // silent
+      setFetchError("Error de conexión con el servidor. Verifica que el backend esté funcionando.");
     }
     setLoading(false);
   };
@@ -119,7 +139,7 @@ export default function DashboardPage() {
               margin: "0 0 6px",
             }}
           >
-            Buenas tardes, Demo
+            {getGreeting()}, {user?.name || "Usuario"}
           </h1>
           <p style={{ fontSize: 14, color: "var(--navy-muted)", margin: 0, lineHeight: 1.5 }}>
             {stats && stats.total_documents > 0
@@ -276,6 +296,61 @@ export default function DashboardPage() {
           >
             Actualizar a Pro
           </Link>
+        </div>
+      )}
+
+      {/* ─── Error State ─── */}
+      {needsAuth && (
+        <div
+          style={{
+            background: "rgba(217,119,6,0.1)",
+            border: "1px solid var(--gold)",
+            borderRadius: 8,
+            padding: "16px 20px",
+            marginBottom: 28,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: 12,
+          }}
+        >
+          <span style={{ fontSize: 13, color: "var(--on-surface)" }}>
+            ⚠️ Sesión no encontrada. Inicia sesión para ver tu dashboard.
+          </span>
+          <Link
+            href="/app/login"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              padding: "8px 16px",
+              background: "var(--gold)",
+              color: "#fff",
+              borderRadius: 6,
+              fontWeight: 600,
+              fontSize: 12,
+              textDecoration: "none",
+            }}
+          >
+            Iniciar Sesión
+          </Link>
+        </div>
+      )}
+
+      {fetchError && (
+        <div
+          style={{
+            background: "rgba(159,18,57,0.08)",
+            border: "1px solid var(--risk-high)",
+            borderRadius: 8,
+            padding: "16px 20px",
+            marginBottom: 28,
+          }}
+        >
+          <span style={{ fontSize: 13, color: "var(--risk-high)", display: "flex", alignItems: "center", gap: 8 }}>
+            ⚠️ {fetchError}
+          </span>
         </div>
       )}
 

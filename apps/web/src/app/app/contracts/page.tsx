@@ -70,14 +70,21 @@ export default function ContractsPage() {
   const [reviewsMap, setReviewsMap] = useState<Record<string, Review>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [needsAuth, setNeedsAuth] = useState(false);
   const { user, authHeaders } = useAuth();
 
   const loadData = async () => {
     setLoading(true);
     setError(null);
+    setNeedsAuth(false);
     try {
       const BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-      const tid = user?.tenant_id || "tenant-demo";
+      const tid = user?.tenant_id;
+      if (!tid) {
+        setNeedsAuth(true);
+        setLoading(false);
+        return;
+      }
       const headers = authHeaders();
       const [docsRes, revsRes] = await Promise.all([
         fetch(`${BASE}/documents?tenant_id=${tid}`, { headers }),
@@ -89,6 +96,8 @@ export default function ContractsPage() {
         // Show newest first (reverse chronological)
         docs.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
         setDocuments(docs);
+      } else if (docsRes.status === 401) {
+        setNeedsAuth(true);
       }
 
       if (revsRes.ok) {
@@ -164,6 +173,45 @@ export default function ContractsPage() {
           Nuevo Contrato
         </Link>
       </div>
+
+      {/* ─── Error States ─── */}
+      {needsAuth && (
+        <div
+          style={{
+            background: "rgba(217,119,6,0.1)",
+            border: "1px solid var(--gold)",
+            borderRadius: 8,
+            padding: "16px 20px",
+            marginBottom: 20,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: 12,
+          }}
+        >
+          <span style={{ fontSize: 13, color: "var(--on-surface)" }}>
+            ⚠️ Sesión no encontrada.
+          </span>
+          <Link
+            href="/app/login"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              padding: "8px 16px",
+              background: "var(--gold)",
+              color: "#fff",
+              borderRadius: 6,
+              fontWeight: 600,
+              fontSize: 12,
+              textDecoration: "none",
+            }}
+          >
+            Iniciar Sesión
+          </Link>
+        </div>
+      )}
 
       {/* Content */}
       {loading && (
