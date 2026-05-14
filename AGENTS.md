@@ -37,7 +37,7 @@ GitHub Pages: https://francogalaz.github.io/legal (NEXT_OUTPUT=export, base path
 
 ### Fase 4 — Monetización
 11. ✅ Pricing tiers (freemium + pro) — plan en User, limites (free: 3/mes), pagina de planes, upgrade/downgrade via API
-12. ❌ Pasarela de pago (Flow o MercadoPago Chile)
+12. ✅ Pasarela de pago Flow.cl — checkout via Flow/Webpay, webhook de confirmacion, pagina de retorno (pendiente configurar FLOW_API_KEY en produccion)
 13. ❌ Onboarding multi-tenant para estudios jurídicos
 
 ### Fase 1 — Landing + Deploy (COMPLETADA)
