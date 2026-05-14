@@ -334,7 +334,7 @@ export default function ContractsPage() {
                         hour: "2-digit",
                         minute: "2-digit",
                       })}
-                      {review && ` · Revisión ${review.id.slice(0, 8)}...`}
+                      {review && ` · ${review.status === "completed" ? "Completado" : review.status === "pending" ? "Pendiente" : review.status === "failed" ? "Fallido" : review.status}`}
                     </span>
                   </div>
                   {review && (

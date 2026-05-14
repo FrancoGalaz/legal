@@ -23,6 +23,7 @@ interface AnalysisResult {
 interface Review {
   id: string;
   document_id: string;
+  document_filename?: string;
   status: string;
   result: AnalysisResult | null;
   created_at: string;
@@ -278,7 +279,7 @@ export default function ReviewPage() {
           Resultado del Análisis
         </h1>
         <p style={{ fontSize: 13, color: "var(--on-surface-variant)", margin: 0 }}>
-          Documento: {review.document_id.slice(0, 16)}...
+          Documento: {review.document_filename || `ID: ${review.document_id.slice(0, 12)}...`}
           · {new Date(review.created_at).toLocaleDateString("es-CL")}
         </p>
       </div>
