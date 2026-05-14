@@ -6,14 +6,21 @@ import Link from "next/link";
 interface Review {
   id: string;
   document_id: string;
+  document_filename?: string;
   status: string;
   result: { overall_risk: string; summary: string; clauses: any[] } | null;
   created_at: string;
 }
 
-interface Document {
-  id: string;
-  filename: string;
+interface Stats {
+  total_reviews: number;
+  completed: number;
+  pending: number;
+  failed: number;
+  total_documents: number;
+  risk_distribution: Record<string, number>;
+  type_distribution: Record<string, number>;
+  weekly_trend: { week: string; count: number }[];
 }
 
 const RISK_COLORS: Record<string, string> = {
@@ -28,31 +35,38 @@ const RISK_BG: Record<string, string> = {
   bajo: "rgba(21,128,61,0.1)",
 };
 
+const TYPE_LABELS: Record<string, string> = {
+  commercial: "Comercial",
+  laboral: "Laboral",
+  corporate: "Corporativo",
+};
+
 export default function DashboardPage() {
   const [reviews, setReviews] = useState<Review[]>([]);
-  const [docs, setDocs] = useState<Document[]>([]);
+  const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
 
   const load = async () => {
     setLoading(true);
     try {
       const BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-      const [rRes, dRes] = await Promise.all([
-        fetch(`${BASE}/reviews?tenant_id=tenant-demo`),
-        fetch(`${BASE}/documents?tenant_id=tenant-demo`),
+      const tid = "tenant-demo";
+
+      const [rRes, sRes] = await Promise.all([
+        fetch(`${BASE}/reviews?tenant_id=${tid}&limit=10`),
+        fetch(`${BASE}/reviews/stats?tenant_id=${tid}`),
       ]);
+
       if (rRes.ok) {
         const data: Review[] = await rRes.json();
-        // Sort newest first
         data.sort(
           (a, b) =>
             new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
         );
         setReviews(data);
       }
-      if (dRes.ok) {
-        const data: Document[] = await dRes.json();
-        setDocs(data);
+      if (sRes.ok) {
+        setStats(await sRes.json());
       }
     } catch {
       // silent
@@ -65,10 +79,16 @@ export default function DashboardPage() {
   }, []);
 
   const completed = reviews.filter((r) => r.status === "completed");
-  const totalDocs = docs.length;
-  const highRisk = completed.filter((r) => r.result?.overall_risk === "alto").length;
   const latestReview = completed[0];
   const recentReviews = reviews.slice(0, 5);
+
+  const maxRiskCount = stats
+    ? Math.max(...Object.values(stats.risk_distribution), 1)
+    : 1;
+
+  const maxWeeklyCount = stats
+    ? Math.max(...stats.weekly_trend.map((w) => w.count), 1)
+    : 1;
 
   return (
     <div>
@@ -82,6 +102,8 @@ export default function DashboardPage() {
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
+          flexWrap: "wrap",
+          gap: 12,
         }}
       >
         <div>
@@ -97,8 +119,8 @@ export default function DashboardPage() {
             Buenas tardes, Demo
           </h1>
           <p style={{ fontSize: 14, color: "var(--navy-muted)", margin: 0, lineHeight: 1.5 }}>
-            {totalDocs > 0
-              ? `Tienes ${totalDocs} contrato${totalDocs !== 1 ? "s" : ""} y ${completed.length} revisión${completed.length !== 1 ? "es" : ""} completada${completed.length !== 1 ? "s" : ""}.${highRisk > 0 ? ` ${highRisk} con riesgo alto.` : ""}`
+            {stats && stats.total_documents > 0
+              ? `Tienes ${stats.total_documents} contrato${stats.total_documents !== 1 ? "s" : ""} y ${stats.completed} revisión${stats.completed !== 1 ? "es" : ""} completada${stats.completed !== 1 ? "s" : ""}.${(stats.risk_distribution.alto || 0) > 0 ? ` ${stats.risk_distribution.alto} con riesgo alto.` : ""}`
               : "Sube tu primer contrato para comenzar a revisarlo con inteligencia artificial."}
           </p>
         </div>
@@ -128,7 +150,7 @@ export default function DashboardPage() {
             Nuevo Análisis
           </Link>
           <Link
-            href="/app/contracts"
+            href="/app/history"
             style={{
               display: "inline-flex",
               alignItems: "center",
@@ -146,7 +168,7 @@ export default function DashboardPage() {
             onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.14)")}
             onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.08)")}
           >
-            Ver Contratos
+            Ver Historial
           </Link>
         </div>
       </div>
@@ -161,12 +183,12 @@ export default function DashboardPage() {
         }}
       >
         {[
-          { label: "Contratos", value: totalDocs, color: "var(--navy)" },
-          { label: "Revisiones", value: completed.length, color: "var(--risk-low)" },
-          { label: "Riesgo Alto", value: highRisk, color: "var(--risk-high)" },
+          { label: "Contratos", value: stats?.total_documents ?? 0, color: "var(--navy)" },
+          { label: "Revisiones", value: stats?.completed ?? 0, color: "var(--risk-low)" },
+          { label: "Riesgo Alto", value: stats?.risk_distribution.alto ?? 0, color: "var(--risk-high)" },
           {
-            label: "Cláusulas Revisadas",
-            value: completed.reduce((s, r) => s + (r.result?.clauses?.length || 0), 0),
+            label: "Pendientes",
+            value: stats ? stats.pending + stats.failed : 0,
             color: "var(--gold)",
           },
         ].map((stat) => (
@@ -203,6 +225,130 @@ export default function DashboardPage() {
             </span>
           </div>
         ))}
+      </div>
+
+      {/* ─── Charts Row ─── */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, marginBottom: 28 }}>
+        {/* Risk Distribution */}
+        <div
+          style={{
+            background: "var(--surface-card)",
+            border: "1px solid var(--outline-variant)",
+            borderRadius: 8,
+            padding: 20,
+          }}
+        >
+          <span style={{ fontWeight: 600, fontSize: 14, color: "var(--navy)", display: "block", marginBottom: 16 }}>
+            Riesgo
+          </span>
+          {loading || !stats ? (
+            <div style={{ color: "var(--navy-muted)", fontSize: 13 }}>Cargando...</div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {[
+                { key: "alto", label: "Alto", color: "var(--risk-high)", bg: "rgba(159,18,57,0.08)" },
+                { key: "medio", label: "Medio", color: "var(--risk-med)", bg: "rgba(217,119,6,0.08)" },
+                { key: "bajo", label: "Bajo", color: "var(--risk-low)", bg: "rgba(21,128,61,0.08)" },
+              ].map((r) => {
+                const count = stats.risk_distribution[r.key] || 0;
+                const pct = Math.max(3, (count / maxRiskCount) * 100);
+                return (
+                  <div key={r.key}>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 4 }}>
+                      <span style={{ color: "var(--on-surface)" }}>{r.label}</span>
+                      <span style={{ color: r.color, fontWeight: 700 }}>{count}</span>
+                    </div>
+                    <div style={{ background: r.bg, borderRadius: 4, height: 8, overflow: "hidden" }}>
+                      <div style={{ width: `${pct}%`, background: r.color, height: 8, borderRadius: 4, transition: "width 0.4s" }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Review Type Distribution */}
+        <div
+          style={{
+            background: "var(--surface-card)",
+            border: "1px solid var(--outline-variant)",
+            borderRadius: 8,
+            padding: 20,
+          }}
+        >
+          <span style={{ fontWeight: 600, fontSize: 14, color: "var(--navy)", display: "block", marginBottom: 16 }}>
+            Tipo de Revisión
+          </span>
+          {loading || !stats ? (
+            <div style={{ color: "var(--navy-muted)", fontSize: 13 }}>Cargando...</div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {Object.entries(stats.type_distribution).map(([key, count]) => {
+                const total = Object.values(stats.type_distribution).reduce((a, b) => a + b, 0) || 1;
+                const pct = Math.round((count / total) * 100);
+                return (
+                  <div key={key}>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 4 }}>
+                      <span style={{ color: "var(--on-surface)" }}>{TYPE_LABELS[key] || key}</span>
+                      <span style={{ color: "var(--gold)", fontWeight: 700 }}>{pct}%</span>
+                    </div>
+                    <div style={{ background: "rgba(255,255,255,0.06)", borderRadius: 4, height: 8, overflow: "hidden" }}>
+                      <div style={{ width: `${pct}%`, background: "var(--gold)", height: 8, borderRadius: 4, transition: "width 0.4s" }} />
+                    </div>
+                  </div>
+                );
+              })}
+              {Object.keys(stats.type_distribution).length === 0 && (
+                <span style={{ color: "var(--navy-muted)", fontSize: 13 }}>Sin datos</span>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Weekly Trend */}
+        <div
+          style={{
+            background: "var(--surface-card)",
+            border: "1px solid var(--outline-variant)",
+            borderRadius: 8,
+            padding: 20,
+          }}
+        >
+          <span style={{ fontWeight: 600, fontSize: 14, color: "var(--navy)", display: "block", marginBottom: 16 }}>
+            Tendencia Semanal
+          </span>
+          {loading || !stats ? (
+            <div style={{ color: "var(--navy-muted)", fontSize: 13 }}>Cargando...</div>
+          ) : (
+            <div style={{ display: "flex", alignItems: "flex-end", gap: 4, height: 80, paddingTop: 8 }}>
+              {stats.weekly_trend.map((w, i) => {
+                const height = Math.max(4, (w.count / maxWeeklyCount) * 64);
+                return (
+                  <div
+                    key={w.week}
+                    style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}
+                    title={`${new Date(w.week).toLocaleDateString("es-CL", { month: "short", day: "numeric" })}: ${w.count}`}
+                  >
+                    <div
+                      style={{
+                        width: "100%",
+                        height,
+                        background: i === stats.weekly_trend.length - 1 ? "var(--gold)" : "var(--outline-variant)",
+                        borderRadius: "3px 3px 0 0",
+                        minHeight: 4,
+                        transition: "height 0.4s",
+                      }}
+                    />
+                    <span style={{ fontSize: 8, color: "var(--navy-muted)", whiteSpace: "nowrap" }}>
+                      {new Date(w.week).toLocaleDateString("es-CL", { month: "short", day: "numeric" })}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* ─── Two-column layout ─── */}
@@ -297,7 +443,7 @@ export default function DashboardPage() {
                           whiteSpace: "nowrap",
                         }}
                       >
-                        Documento {r.document_id.slice(0, 10)}...
+                        {r.document_filename || `Documento ${r.document_id.slice(0, 10)}...`}
                       </span>
                       <span
                         style={{
@@ -364,6 +510,11 @@ export default function DashboardPage() {
 
           {!loading && latestReview && (
             <div style={{ padding: 20 }}>
+              {latestReview.document_filename && (
+                <p style={{ fontSize: 12, color: "var(--navy-muted)", margin: "0 0 10px" }}>
+                  {latestReview.document_filename}
+                </p>
+              )}
               <div
                 style={{
                   display: "flex",

@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 
 interface Review {
   id: string;
   document_id: string;
+  document_filename?: string;
+  review_type: string;
   status: string;
   result: { overall_risk: string } | null;
   created_at: string;
@@ -17,6 +19,7 @@ const RISK_COLORS: Record<string, string> = {
   bajo: "var(--risk-low)",
   pending: "var(--navy-muted)",
   failed: "var(--risk-high)",
+  in_progress: "var(--gold)",
 };
 
 const RISK_BG: Record<string, string> = {
@@ -25,28 +28,53 @@ const RISK_BG: Record<string, string> = {
   bajo: "rgba(21,128,61,0.1)",
   pending: "rgba(116,119,125,0.1)",
   failed: "rgba(159,18,57,0.1)",
+  in_progress: "rgba(217,119,6,0.1)",
+};
+
+const TYPE_LABELS: Record<string, string> = {
+  commercial: "Comercial",
+  laboral: "Laboral",
+  corporate: "Corporativo",
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  completed: "Completado",
+  pending: "Pendiente",
+  in_progress: "En Progreso",
+  failed: "Fallido",
 };
 
 export default function HistoryPage() {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [typeFilter, setTypeFilter] = useState("");
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const tid = "tenant-demo";
+      const params = new URLSearchParams({ tenant_id: tid });
+      if (statusFilter) params.set("status", statusFilter);
+      if (typeFilter) params.set("review_type", typeFilter);
+      if (searchQuery) params.set("search", searchQuery);
+
+      const res = await fetch(`${BASE}/reviews?${params.toString()}`);
+      if (res.ok) {
+        const data = await res.json();
+        setReviews(Array.isArray(data) ? data : []);
+      }
+    } catch {
+      // silently fail
+    }
+    setLoading(false);
+  }, [statusFilter, typeFilter, searchQuery]);
 
   useEffect(() => {
-    const load = async () => {
-      try {
-        const BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-        const res = await fetch(`${BASE}/reviews?tenant_id=tenant-demo`);
-        if (res.ok) {
-          const data = await res.json();
-          setReviews(Array.isArray(data) ? data : []);
-        }
-      } catch {
-        // silently fail
-      }
-      setLoading(false);
-    };
     load();
-  }, []);
+  }, [load]);
 
   return (
     <div>
@@ -65,6 +93,74 @@ export default function HistoryPage() {
         Todas las revisiones realizadas.
       </p>
 
+      {/* ─── Filters ─── */}
+      <div
+        style={{
+          display: "flex",
+          gap: 10,
+          marginBottom: 20,
+          flexWrap: "wrap",
+          alignItems: "center",
+        }}
+      >
+        <input
+          type="text"
+          placeholder="Buscar por nombre de archivo..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          style={{
+            padding: "8px 14px",
+            borderRadius: 6,
+            border: "1px solid var(--outline-variant)",
+            background: "var(--surface-card)",
+            color: "var(--on-surface)",
+            fontSize: 13,
+            flex: 1,
+            minWidth: 200,
+            outline: "none",
+          }}
+        />
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          style={{
+            padding: "8px 14px",
+            borderRadius: 6,
+            border: "1px solid var(--outline-variant)",
+            background: "var(--surface-card)",
+            color: "var(--on-surface)",
+            fontSize: 13,
+            cursor: "pointer",
+            outline: "none",
+          }}
+        >
+          <option value="">Todos los estados</option>
+          {Object.entries(STATUS_LABELS).map(([key, label]) => (
+            <option key={key} value={key}>{label}</option>
+          ))}
+        </select>
+        <select
+          value={typeFilter}
+          onChange={(e) => setTypeFilter(e.target.value)}
+          style={{
+            padding: "8px 14px",
+            borderRadius: 6,
+            border: "1px solid var(--outline-variant)",
+            background: "var(--surface-card)",
+            color: "var(--on-surface)",
+            fontSize: 13,
+            cursor: "pointer",
+            outline: "none",
+          }}
+        >
+          <option value="">Todos los tipos</option>
+          {Object.entries(TYPE_LABELS).map(([key, label]) => (
+            <option key={key} value={key}>{label}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* ─── List ─── */}
       {loading && (
         <div style={{ textAlign: "center", padding: 32, color: "var(--navy-muted)", fontSize: 14 }}>
           Cargando...
@@ -74,7 +170,9 @@ export default function HistoryPage() {
       {!loading && reviews.length === 0 && (
         <div style={{ textAlign: "center", padding: 32 }}>
           <p style={{ color: "var(--navy-muted)", fontSize: 14, margin: "0 0 16px" }}>
-            No hay revisiones aún.
+            {searchQuery || statusFilter || typeFilter
+              ? "No se encontraron revisiones con esos filtros."
+              : "No hay revisiones aún."}
           </p>
           <Link
             href="/app/review/new"
@@ -125,7 +223,13 @@ export default function HistoryPage() {
                       textAlign: "center",
                     }}
                   >
-                    {risk}
+                    {risk === "pending"
+                      ? "Pendiente"
+                      : risk === "in_progress"
+                        ? "Analizando"
+                        : risk === "failed"
+                          ? "Fallido"
+                          : risk}
                   </span>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <span
@@ -134,11 +238,16 @@ export default function HistoryPage() {
                         fontWeight: 600,
                         color: "var(--navy)",
                         display: "block",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
                       }}
                     >
-                      Documento {review.document_id.slice(0, 12)}...
+                      {review.document_filename || `Documento ${review.document_id.slice(0, 12)}...`}
                     </span>
                     <span style={{ fontSize: 12, color: "var(--on-surface-variant)" }}>
+                      {TYPE_LABELS[review.review_type] || review.review_type}
+                      {" · "}
                       {new Date(review.created_at).toLocaleDateString("es-CL", {
                         day: "numeric",
                         month: "short",

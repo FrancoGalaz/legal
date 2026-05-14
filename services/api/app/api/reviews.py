@@ -1,14 +1,14 @@
 import json
 import logging
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import get_async_session, SessionLocal
 from app.services.review_store import ReviewStore
 from app.services.document_store import DocumentStore
 from app.services.llm_service import LLMService
-from app.schemas.reviews import ReviewCreateRequest, ReviewResponse
+from app.schemas.reviews import ReviewCreateRequest, ReviewResponse, ReviewStats
 
 router = APIRouter(prefix="/reviews", tags=["reviews"])
 logger = logging.getLogger(__name__)
@@ -50,18 +50,41 @@ async def create_review(
     background_tasks.add_task(_run_analysis, review.id, req.document_id, req.tenant_id, req.review_type)
     return review
 
-@router.get("", response_model=list[ReviewResponse])
-async def list_reviews(
-    tenant_id: str,
+
+@router.get("/stats", response_model=ReviewStats)
+async def get_review_stats(
+    tenant_id: str = Query(..., description="ID del tenant"),
     session: AsyncSession = Depends(get_async_session)
 ):
     store = ReviewStore(session)
-    return await store.list_by_tenant(tenant_id)
+    return await store.get_stats(tenant_id)
+
+
+@router.get("", response_model=list[ReviewResponse])
+async def list_reviews(
+    tenant_id: str = Query(..., description="ID del tenant"),
+    status: str | None = Query(None, description="Filtrar por estado: pending, completed, failed"),
+    review_type: str | None = Query(None, description="Filtrar por tipo: commercial, laboral, corporate"),
+    search: str | None = Query(None, description="Buscar por nombre de archivo"),
+    limit: int = Query(50, ge=1, le=200, description="Máximo de resultados"),
+    offset: int = Query(0, ge=0, description="Offset para paginación"),
+    session: AsyncSession = Depends(get_async_session)
+):
+    store = ReviewStore(session)
+    return await store.list_by_tenant(
+        tenant_id,
+        status=status,
+        review_type=review_type,
+        search=search,
+        limit=limit,
+        offset=offset,
+    )
+
 
 @router.get("/{review_id}", response_model=ReviewResponse)
 async def get_review(
     review_id: str,
-    tenant_id: str,  # En producción vendría del token JWT
+    tenant_id: str = Query(..., description="ID del tenant"),
     session: AsyncSession = Depends(get_async_session)
 ):
     store = ReviewStore(session)
