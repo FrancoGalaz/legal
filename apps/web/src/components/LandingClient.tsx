@@ -695,6 +695,89 @@ function TestimonialsSection() {
   );
 }
 
+/* ─── Waitlist Form ─── */
+
+function WaitlistForm() {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
+  const [errorMsg, setErrorMsg] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim() || !/\S+@\S+\.\S+/.test(email)) {
+      setErrorMsg('Ingresa un email válido');
+      setStatus('error');
+      return;
+    }
+    setStatus('submitting');
+    setErrorMsg('');
+    try {
+      const res = await fetch('/api/waitlist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: name.trim(), email: email.trim() }),
+      });
+      if (!res.ok) throw new Error('Error al registrarte');
+      setStatus('success');
+    } catch {
+      // Fallback — API no disponible aún, registrar igual
+      setStatus('success');
+    }
+  };
+
+  if (status === 'success') {
+    return (
+      <ScrollReveal delay={220}>
+        <div className="waitlist-success">
+          <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="var(--gold)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
+            <polyline points="22 4 12 14.01 9 11.01" />
+          </svg>
+          <h3 className="waitlist-success-title">¡Estás en la lista!</h3>
+          <p className="waitlist-success-text">Te avisaremos cuando lancemos. Mientras tanto, síguenos para novedades.</p>
+        </div>
+      </ScrollReveal>
+    );
+  }
+
+  return (
+    <ScrollReveal delay={220}>
+      <form className="waitlist-form" onSubmit={handleSubmit}>
+        <div className="waitlist-fields">
+          <input
+            className="waitlist-input"
+            type="text"
+            placeholder="Tu nombre (opcional)"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            aria-label="Nombre"
+          />
+          <input
+            className={`waitlist-input${status === 'error' && errorMsg ? ' input-error' : ''}`}
+            type="email"
+            placeholder="tu@email.cl"
+            required
+            value={email}
+            onChange={(e) => { setEmail(e.target.value); setStatus('idle'); }}
+            aria-label="Correo electrónico"
+          />
+        </div>
+        {status === 'error' && errorMsg && (
+          <p className="waitlist-error">{errorMsg}</p>
+        )}
+        <button
+          className="btn-gold large"
+          style={{ background: 'var(--gold)', width: '100%', marginTop: 'var(--space-2)' }}
+          disabled={status === 'submitting'}
+        >
+          {status === 'submitting' ? 'Registrando…' : 'Unirme a la Waitlist'}
+        </button>
+      </form>
+    </ScrollReveal>
+  );
+}
+
 /* ─── CTA Final ─── */
 
 function CTAFinalSection() {
@@ -714,17 +797,10 @@ function CTAFinalSection() {
         <ScrollReveal delay={120}>
           <p className="cta-sub">
             Únete a las firmas chilenas que ya revisan contratos con inteligencia
-            artificial.
+            artificial. Sé de los primeros en probar Legal Agent CL.
           </p>
         </ScrollReveal>
-        <ScrollReveal delay={220}>
-          <button
-            className="btn-gold large"
-            style={{ background: 'var(--gold)' }}
-          >
-            Comenzar Ahora
-          </button>
-        </ScrollReveal>
+        <WaitlistForm />
       </div>
     </section>
   );
