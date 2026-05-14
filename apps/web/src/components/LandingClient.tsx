@@ -175,9 +175,9 @@ function Navbar() {
           <a href="#demo" onClick={() => setMenuOpen(false)}>Demo</a>
           <a href="#api" onClick={() => setMenuOpen(false)}>API</a>
           <a href="#testimonios" onClick={() => setMenuOpen(false)}>Clientes</a>
-          <button className="btn-gold nav-cta" style={{ background: 'var(--gold)' }} onClick={() => setMenuOpen(false)}>
+          <a href="/app/login" className="btn-gold nav-cta" style={{ background: 'var(--gold)', textDecoration: 'none' }} onClick={() => setMenuOpen(false)}>
             Comenzar
-          </button>
+          </a>
         </div>
       </div>
     </nav>
@@ -247,10 +247,10 @@ function HeroSection() {
 
         <ScrollReveal delay={320}>
           <div className="hero-ctas">
-            <button className="btn-gold" style={{ background: 'var(--gold)' }}>
+            <a href="/app/login" className="btn-gold" style={{ background: 'var(--gold)', textDecoration: 'none' }}>
               Analizar Contrato
-            </button>
-            <button className="btn-ghost">Ver Demo</button>
+            </a>
+            <a href="#demo" className="btn-ghost" style={{ textDecoration: 'none' }}>Ver Demo</a>
           </div>
         </ScrollReveal>
 
@@ -318,10 +318,10 @@ interface MetricItem {
 function MetricsSection() {
   const [ref, vis, mounted] = useScrollReveal({ threshold: 0.35 });
   const data: MetricItem[] = [
-    { val: 12847, label: 'Contratos Revisados', pre: '+' },
-    { val: 97.3, label: 'Precisión del Análisis', suf: '%', dec: 1 },
+    { val: 127, label: 'Contratos Revisados', pre: '+' },
+    { val: 94.2, label: 'Precisión del Análisis', suf: '%', dec: 1 },
     { val: 90, label: 'Segundos Promedio', pre: '<', suf: 's' },
-    { val: 86, label: 'Firmas Activas', pre: '+' },
+    { val: 12, label: 'Firmas Activas', pre: '+' },
   ];
 
   return (
