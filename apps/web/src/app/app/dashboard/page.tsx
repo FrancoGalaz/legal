@@ -43,7 +43,7 @@ const TYPE_LABELS: Record<string, string> = {
 };
 
 export default function DashboardPage() {
-  const { user } = useAuth();
+  const { user, authHeaders } = useAuth();
   const [reviews, setReviews] = useState<Review[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -52,11 +52,12 @@ export default function DashboardPage() {
     setLoading(true);
     try {
       const BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-      const tid = "tenant-demo";
+      const tid = user?.tenant_id || "tenant-demo";
+      const headers = authHeaders();
 
       const [rRes, sRes] = await Promise.all([
-        fetch(`${BASE}/reviews?tenant_id=${tid}&limit=10`),
-        fetch(`${BASE}/reviews/stats?tenant_id=${tid}`),
+        fetch(`${BASE}/reviews?tenant_id=${tid}&limit=10`, { headers }),
+        fetch(`${BASE}/reviews/stats?tenant_id=${tid}`, { headers }),
       ]);
 
       if (rRes.ok) {

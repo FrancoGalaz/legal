@@ -23,6 +23,7 @@ export interface User {
   reviews_used_this_period: number;
   reviews_remaining: number;
   tenant_name?: string;
+  tenant_id: string;
 }
 
 interface AuthContextType {

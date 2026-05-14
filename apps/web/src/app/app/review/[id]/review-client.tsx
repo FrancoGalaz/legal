@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Clause {
   ref: string;
@@ -162,6 +163,7 @@ export default function ReviewPage() {
   const [review, setReview] = useState<Review | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { user, authHeaders } = useAuth();
 
   useEffect(() => {
     let cancelled = false;
@@ -171,7 +173,8 @@ export default function ReviewPage() {
         while (!cancelled) {
           const BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
           const res = await fetch(
-            `${BASE}/reviews/${reviewId}?tenant_id=tenant-demo`
+            `${BASE}/reviews/${reviewId}?tenant_id=${user?.tenant_id || "tenant-demo"}`,
+            { headers: authHeaders() }
           );
           if (!res.ok) throw new Error("Review not found");
           const data: Review = await res.json();

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Review {
   id: string;
@@ -50,18 +51,21 @@ export default function HistoryPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
+  const { user, authHeaders } = useAuth();
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
       const BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-      const tid = "tenant-demo";
+      const tid = user?.tenant_id || "tenant-demo";
       const params = new URLSearchParams({ tenant_id: tid });
       if (statusFilter) params.set("status", statusFilter);
       if (typeFilter) params.set("review_type", typeFilter);
       if (searchQuery) params.set("search", searchQuery);
 
-      const res = await fetch(`${BASE}/reviews?${params.toString()}`);
+      const res = await fetch(`${BASE}/reviews?${params.toString()}`, {
+        headers: authHeaders(),
+      });
       if (res.ok) {
         const data = await res.json();
         setReviews(Array.isArray(data) ? data : []);
@@ -70,7 +74,7 @@ export default function HistoryPage() {
       // silently fail
     }
     setLoading(false);
-  }, [statusFilter, typeFilter, searchQuery]);
+  }, [statusFilter, typeFilter, searchQuery, user?.tenant_id, authHeaders]);
 
   useEffect(() => {
     load();

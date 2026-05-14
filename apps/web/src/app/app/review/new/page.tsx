@@ -2,11 +2,13 @@
 
 import { useState, useRef, type DragEvent } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export default function NewReviewPage() {
   const router = useRouter();
+  const { user, authHeaders } = useAuth();
   const [text, setText] = useState("");
   const [fileName, setFileName] = useState("");
   const [fileObj, setFileObj] = useState<File | null>(null);
@@ -60,11 +62,12 @@ export default function NewReviewPage() {
         // Upload raw file — backend extracts text
         setProgressMsg("Extrayendo texto del archivo...");
         const formData = new FormData();
-        formData.append("tenant_id", "tenant-demo");
+        formData.append("tenant_id", user?.tenant_id || "tenant-demo");
         formData.append("file", fileObj);
 
         const uploadRes = await fetch(`${API_BASE}/documents/upload`, {
           method: "POST",
+          headers: { Authorization: authHeaders().Authorization || "" },
           body: formData,
         });
         if (!uploadRes.ok) {
@@ -78,9 +81,9 @@ export default function NewReviewPage() {
         setProgressMsg("Enviando documento...");
         const docRes = await fetch(`${API_BASE}/documents`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: authHeaders(),
           body: JSON.stringify({
-            tenant_id: "tenant-demo",
+            tenant_id: user?.tenant_id || "tenant-demo",
             filename: fileName || "contrato.txt",
             content_type: "text/plain",
             text_content: text,
@@ -95,9 +98,9 @@ export default function NewReviewPage() {
       setProgressMsg("Iniciando análisis con IA...");
       const revRes = await fetch(`${API_BASE}/reviews`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: authHeaders(),
         body: JSON.stringify({
-          tenant_id: "tenant-demo",
+          tenant_id: user?.tenant_id || "tenant-demo",
           document_id: docId,
           review_type: contractType,
           language: "es",
@@ -112,7 +115,8 @@ export default function NewReviewPage() {
       while (current.status === "pending" || current.status === "in_progress") {
         await new Promise((r) => setTimeout(r, 1500));
         const pollRes = await fetch(
-          `${API_BASE}/reviews/${review.id}?tenant_id=tenant-demo`
+          `${API_BASE}/reviews/${review.id}?tenant_id=${user?.tenant_id || "tenant-demo"}`,
+          { headers: authHeaders() }
         );
         if (pollRes.ok) current = await pollRes.json();
       }

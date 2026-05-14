@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Document {
   id: string;
@@ -69,15 +70,18 @@ export default function ContractsPage() {
   const [reviewsMap, setReviewsMap] = useState<Record<string, Review>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { user, authHeaders } = useAuth();
 
   const loadData = async () => {
     setLoading(true);
     setError(null);
     try {
       const BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const tid = user?.tenant_id || "tenant-demo";
+      const headers = authHeaders();
       const [docsRes, revsRes] = await Promise.all([
-        fetch(`${BASE}/documents?tenant_id=tenant-demo`),
-        fetch(`${BASE}/reviews?tenant_id=tenant-demo`),
+        fetch(`${BASE}/documents?tenant_id=${tid}`, { headers }),
+        fetch(`${BASE}/reviews?tenant_id=${tid}`, { headers }),
       ]);
 
       if (docsRes.ok) {
