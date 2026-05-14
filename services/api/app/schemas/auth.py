@@ -26,5 +26,14 @@ class UserResponse(BaseModel):
     name: str
     is_active: bool
     created_at: datetime
+    plan: str = "free"
+    reviews_used_this_period: int = 0
 
     model_config = {"from_attributes": True}
+
+
+class UserWithPlanResponse(UserResponse):
+    """Extends UserResponse with computed plan info."""
+    plan_label: str = "Gratuito"
+    plan_limit: int = 3
+    reviews_remaining: int = 3

@@ -17,12 +17,28 @@ if str(API_ROOT) not in sys.path:
 from app.core.db import init_db, get_async_session, SessionLocal
 from app.main import app
 from app.models.tenant import Tenant
+from app.models.user import User
+from app.core.auth import hash_password
 
-async def seed_tenant():
+
+async def seed_data():
     async with SessionLocal() as session:
+        # Seed tenant
         tenant = Tenant(id="tenant-test-1", name="Test Firm", slug="test-firm")
         session.add(tenant)
+
+        # Seed a test user
+        user = User(
+            id="test-user-1",
+            email="test@legalagent.cl",
+            name="Test User",
+            hashed_password=hash_password("testpass123"),
+            tenant_id="tenant-test-1",
+            plan="free",
+        )
+        session.add(user)
         await session.commit()
 
+
 asyncio.run(init_db())
-asyncio.run(seed_tenant())
+asyncio.run(seed_data())

@@ -18,6 +18,7 @@ from app.schemas.auth import (
     RegisterRequest,
     TokenResponse,
     UserResponse,
+    UserWithPlanResponse,
 )
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -80,9 +81,22 @@ async def login(
     return TokenResponse(access_token=token)
 
 
-@router.get("/me", response_model=UserResponse)
+@router.get("/me", response_model=UserWithPlanResponse)
 async def get_me(
     current_user: User = Depends(get_current_user),
 ):
-    """Get the currently authenticated user's profile."""
-    return current_user
+    """Get the currently authenticated user's profile with plan info."""
+    from app.api.pricing import get_plan_info
+    plan = get_plan_info(current_user)
+    return UserWithPlanResponse(
+        id=current_user.id,
+        email=current_user.email,
+        name=current_user.name,
+        is_active=current_user.is_active,
+        created_at=current_user.created_at,
+        plan=current_user.plan,
+        reviews_used_this_period=plan.reviews_used,
+        plan_label=plan.plan_label,
+        plan_limit=plan.reviews_limit or 999,
+        reviews_remaining=plan.reviews_remaining or 999,
+    )

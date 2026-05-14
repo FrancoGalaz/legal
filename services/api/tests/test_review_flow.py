@@ -11,10 +11,27 @@ from app.schemas.reviews import ReviewCreateRequest
 from app.schemas.review_schemas import AnalysisResult, ClauseAnalysis
 
 
+async def get_auth_token(client: AsyncClient) -> str:
+    """Helper: login test user and return a token."""
+    resp = await client.post(
+        "/auth/login",
+        json={"email": "test@legalagent.cl", "password": "testpass123"},
+    )
+    assert resp.status_code == 200
+    return resp.json()["access_token"]
+
+
+def auth_headers(token: str) -> dict:
+    return {"Authorization": f"Bearer {token}"}
+
+
 @pytest.mark.asyncio
 async def test_create_review_triggers_background_task():
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
+        token = await get_auth_token(client)
+        headers = auth_headers(token)
+
         # Create a document first
         doc_resp = await client.post(
             "/documents",
@@ -22,8 +39,9 @@ async def test_create_review_triggers_background_task():
                 "tenant_id": "tenant-test-1",
                 "filename": "contrato.pdf",
                 "content_type": "application/pdf",
-                "text_content": "Este es un contrato de prueba para análisis."
-            }
+                "text_content": "Este es un contrato de prueba para análisis.",
+            },
+            headers=headers,
         )
         assert doc_resp.status_code == 201
         document_id = doc_resp.json()["id"]
@@ -35,8 +53,9 @@ async def test_create_review_triggers_background_task():
                     "tenant_id": "tenant-test-1",
                     "document_id": document_id,
                     "review_type": "commercial",
-                    "language": "es"
-                }
+                    "language": "es",
+                },
+                headers=headers,
             )
 
     assert review_resp.status_code == 201
@@ -51,6 +70,9 @@ async def test_create_review_triggers_background_task():
 async def test_get_review_after_analysis():
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
+        token = await get_auth_token(client)
+        headers = auth_headers(token)
+
         # Create a document
         doc_resp = await client.post(
             "/documents",
@@ -58,8 +80,9 @@ async def test_get_review_after_analysis():
                 "tenant_id": "tenant-test-1",
                 "filename": "contrato.pdf",
                 "content_type": "application/pdf",
-                "text_content": "Texto del contrato"
-            }
+                "text_content": "Texto del contrato",
+            },
+            headers=headers,
         )
         document_id = doc_resp.json()["id"]
 
@@ -70,8 +93,9 @@ async def test_get_review_after_analysis():
                 "tenant_id": "tenant-test-1",
                 "document_id": document_id,
                 "review_type": "commercial",
-                "language": "es"
-            }
+                "language": "es",
+            },
+            headers=headers,
         )
         review_id = review_resp.json()["id"]
 
@@ -85,10 +109,10 @@ async def test_get_review_after_analysis():
                     text_excerpt="Extracto",
                     risk="bajo",
                     finding="Sin hallazgos",
-                    recommendation="Ninguna"
+                    recommendation="Ninguna",
                 )
             ],
-            summary="Todo en orden"
+            summary="Todo en orden",
         )
         async with SessionLocal() as session:
             store = ReviewStore(session)
@@ -116,7 +140,7 @@ async def test_run_analysis_directly():
             tenant_id="tenant-test-1",
             filename="test.pdf",
             content_type="application/pdf",
-            text_content="Contrato de arrendamiento simple"
+            text_content="Contrato de arrendamiento simple",
         ))
 
         review_store = ReviewStore(session)
@@ -124,13 +148,13 @@ async def test_run_analysis_directly():
             tenant_id="tenant-test-1",
             document_id=doc.id,
             review_type="commercial",
-            language="es"
+            language="es",
         ))
 
     mock_result = AnalysisResult(
         overall_risk="medio",
         clauses=[],
-        summary="Resumen directo"
+        summary="Resumen directo",
     )
 
     with patch("app.services.llm_service.LLMService.analyze_contract", new_callable=AsyncMock) as mock_analyze:
@@ -159,7 +183,7 @@ async def test_run_analysis_document_not_found():
             tenant_id="tenant-test-1",
             document_id="nonexistent-doc",
             review_type="commercial",
-            language="es"
+            language="es",
         ))
 
     await _run_analysis(review.id, "nonexistent-doc", "tenant-test-1")
@@ -177,14 +201,18 @@ async def test_run_analysis_document_not_found():
 async def test_get_document_by_id():
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
+        token = await get_auth_token(client)
+        headers = auth_headers(token)
+
         doc_resp = await client.post(
             "/documents",
             json={
                 "tenant_id": "tenant-test-1",
                 "filename": "test.pdf",
                 "content_type": "application/pdf",
-                "text_content": "Contenido"
-            }
+                "text_content": "Contenido",
+            },
+            headers=headers,
         )
         document_id = doc_resp.json()["id"]
 
