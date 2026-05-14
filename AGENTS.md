@@ -26,7 +26,7 @@ GitHub Pages: https://francogalaz.github.io/legal (NEXT_OUTPUT=export, base path
 - **JWT_SECRET_KEY generado**: clave segura configurada en .env (reemplazo del default "change-me-in-production").
 - **.env.example actualizado**: incluye documentacion completa de JWT, Flow.cl, CORS, DB y LLM.
 - **Todo el roadmap (items 1-13) esta COMPLETO**: landing, app funcional, auth, AI core, pricing, Flow.cl, multi-tenant.
-- **41 tests automatizados**: auth (register/auto-tenant/login/me), documents, health, LLM prompts, pricing, reviews, review flow.
+- **55 tests automatizados**: auth (register/auto-tenant/login/me, 12), pricing (6), documents (2), health (1), reviews (8), review flow (6), LLM service (9), tenants (12).
 
 ## Roadmap (orden de prioridad)
 
