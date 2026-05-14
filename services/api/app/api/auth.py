@@ -84,10 +84,20 @@ async def login(
 @router.get("/me", response_model=UserWithPlanResponse)
 async def get_me(
     current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_async_session),
 ):
     """Get the currently authenticated user's profile with plan info."""
     from app.api.pricing import get_plan_info
     plan = get_plan_info(current_user)
+
+    # Get tenant name
+    from app.models.tenant import Tenant
+    tenant_name = None
+    result = await session.execute(select(Tenant).where(Tenant.id == current_user.tenant_id))
+    tenant = result.scalar_one_or_none()
+    if tenant:
+        tenant_name = tenant.name
+
     return UserWithPlanResponse(
         id=current_user.id,
         email=current_user.email,
@@ -99,4 +109,5 @@ async def get_me(
         plan_label=plan.plan_label,
         plan_limit=plan.reviews_limit or 999,
         reviews_remaining=plan.reviews_remaining or 999,
+        tenant_name=tenant_name,
     )

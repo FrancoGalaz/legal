@@ -8,6 +8,7 @@ from app.api.documents import router as documents_router
 from app.api.reviews import router as reviews_router
 from app.api.auth import router as auth_router
 from app.api.pricing import router as pricing_router
+from app.api.tenants import router as tenants_router
 from app.core.config import settings
 from app.core.db import init_db
 
@@ -37,6 +38,7 @@ app.include_router(documents_router)
 app.include_router(reviews_router)
 app.include_router(auth_router)
 app.include_router(pricing_router)
+app.include_router(tenants_router)
 
 
 @app.get("/health")

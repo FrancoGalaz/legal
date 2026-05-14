@@ -22,6 +22,7 @@ export interface User {
   plan_limit: number;
   reviews_used_this_period: number;
   reviews_remaining: number;
+  tenant_name?: string;
 }
 
 interface AuthContextType {

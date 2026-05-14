@@ -251,6 +251,43 @@ export default function LoginPage() {
               : "¿Ya tienes cuenta? Inicia sesión"}
           </button>
         </div>
+
+        {/* Multi-tenant onboarding link */}
+        <div style={{ textAlign: "center", marginTop: 16 }}>
+          <div
+            style={{
+              borderTop: "1px solid var(--outline-variant)",
+              paddingTop: 16,
+            }}
+          >
+            <p style={{ fontSize: 12, color: "var(--navy-muted)", margin: "0 0 8px" }}>
+              ¿Eres un estudio jurídico?
+            </p>
+            <button
+              onClick={() => router.push("/app/onboarding")}
+              style={{
+                background: "none",
+                border: "1px solid var(--gold)",
+                color: "var(--gold)",
+                borderRadius: 6,
+                padding: "8px 16px",
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: "pointer",
+                fontFamily: "inherit",
+                transition: "all 0.15s",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "rgba(189,146,38,0.06)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "transparent";
+              }}
+            >
+              🏛 Crear Estudio Jurídico
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

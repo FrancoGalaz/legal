@@ -37,3 +37,4 @@ class UserWithPlanResponse(UserResponse):
     plan_label: str = "Gratuito"
     plan_limit: int = 3
     reviews_remaining: int = 3
+    tenant_name: Optional[str] = None
