@@ -14,7 +14,7 @@ router = APIRouter(prefix="/reviews", tags=["reviews"])
 logger = logging.getLogger(__name__)
 
 
-async def _run_analysis(review_id: str, document_id: str, tenant_id: str) -> None:
+async def _run_analysis(review_id: str, document_id: str, tenant_id: str, review_type: str = "commercial") -> None:
     async with SessionLocal() as session:
         try:
             doc_store = DocumentStore(session)
@@ -26,7 +26,7 @@ async def _run_analysis(review_id: str, document_id: str, tenant_id: str) -> Non
                 return
 
             llm = LLMService()
-            result = await llm.analyze_contract(document.text_content or "")
+            result = await llm.analyze_contract(document.text_content or "", review_type)
 
             review_store = ReviewStore(session)
             await review_store.update_status(review_id, tenant_id, "completed", result)
@@ -47,7 +47,7 @@ async def create_review(
 ):
     store = ReviewStore(session)
     review = await store.create(req)
-    background_tasks.add_task(_run_analysis, review.id, req.document_id, req.tenant_id)
+    background_tasks.add_task(_run_analysis, review.id, req.document_id, req.tenant_id, req.review_type)
     return review
 
 @router.get("", response_model=list[ReviewResponse])

@@ -31,7 +31,7 @@ GitHub Pages: https://francogalaz.github.io/legal (NEXT_OUTPUT=export, base path
 
 ### Fase 3 — AI Core
 8. ✅ Integrar LLM real para revisión de contratos (OpenRouter)
-9. ⚠️ Templates de prompts específicos por tipo de contrato (comercial, laboral, corporativo)
+9. ✅ Templates de prompts específicos por tipo de contrato (comercial, laboral, corporativo)
 10. ❌ Dashboard con historial de revisiones y métricas avanzadas (parcialmente hecho)
 
 ### Fase 4 — Monetización

@@ -10,14 +10,14 @@ from app.schemas.review_schemas import AnalysisResult, ClauseAnalysis
 
 logger = logging.getLogger(__name__)
 
-CHILEAN_LEGAL_PROMPT = """Eres un abogado experto en derecho chileno especializado en revisión de contratos.
+BASE_INSTRUCTION = """Eres un abogado experto en derecho chileno especializado en revisión de contratos.
 
 Tu tarea es analizar el siguiente contrato desde la perspectiva del sistema legal chileno, considerando especialmente:
 - Código Civil de Chile
 - Ley 19.496 sobre Protección de los Derechos de los Consumidores
 - Ley 19.628 sobre Protección de la Vida Privada (protección de datos personales)
 
-Instrucciones:
+Instrucciones generales:
 1. Identifica las cláusulas más importantes del contrato
 2. Evalúa el riesgo legal de cada cláusula (bajo, medio, alto)
 3. Detecta posibles abusos, omisiones o términos desleales
@@ -44,6 +44,66 @@ Debes responder EXCLUSIVAMENTE con un objeto JSON válido que tenga esta estruct
 No incluyas texto adicional fuera del JSON. Asegúrate de que el JSON sea válido.
 """
 
+PROMPT_TEMPLATES = {
+    "commercial": BASE_INSTRUCTION + """
+
+ESPECIALIZACIÓN: CONTRATO COMERCIAL
+
+Este es un contrato de naturaleza comercial. Al analizarlo, presta especial atención a:
+
+1. **Obligaciones de las partes**: Verifica que exista equilibrio prestacional. Detecta cláusulas que impongan obligaciones excesivas o desproporcionadas para una sola parte.
+2. **Precio y forma de pago**: Revisa condiciones de pago, reajustes, intereses moratorios (máximo permitido por ley), multas y garantías.
+3. **Plazos de entrega y ejecución**: Evalúa si los plazos son razonables y si existen cláusulas de penalización por atraso.
+4. **Garantías**: Analiza boletas de garantía, retenciones, seguros exigidos y su proporcionalidad.
+5. **Terminación anticipada**: Revisa causales de término, preaviso, indemnizaciones y efectos de la terminación.
+6. **Confidencialidad y propiedad intelectual**: Verifica cláusulas de confidencialidad, cesión de derechos y propiedad de resultados.
+7. **Competencia desleal**: Detecta cláusulas restrictivas que puedan ser abusivas o contrarias a la libre competencia.
+8. **Legislación aplicable**: Para contratos comerciales internacionales, verifica la ley aplicable y jurisdicción.
+9. **Cláusulas abusivas**: Identifica cualquier estipulación que pueda considerarse abusiva según la Ley 19.496 (especialmente en contratos de adhesión).
+
+Enfócate en los riesgos comerciales y económicos del contrato desde la perspectiva chilena.
+""",
+
+    "laboral": BASE_INSTRUCTION + """
+
+ESPECIALIZACIÓN: CONTRATO LABORAL
+
+Este es un contrato de naturaleza laboral (relación empleador-trabajador). Al analizarlo, presta especial atención a:
+
+1. **Jornada de trabajo**: Verifica que las horas de trabajo cumplan con el límite legal (45 horas semanales según Ley 21.561). Revisa horas extras, descansos y turnos.
+2. **Remuneración**: Revisa que el sueldo base, gratificaciones, bonos y otros beneficios cumplan con el Ingreso Mínimo Mensual y las normas del Código del Trabajo.
+3. **Indemnizaciones**: Analiza cláusulas de indemnización por años de servicio, aviso previo (30 días), y causales de despido.
+4. **Ferias y permisos**: Verifica feriado legal (15 días hábiles), permisos especiales (nacimiento, fallecimiento, etc.) y días administrativos.
+5. **Cláusulas restrictivas**: Examina con especial cuidado pactos de no competencia post-terminación (solo válidos si hay un beneficio económico real para el trabajador), confidencialidad y exclusividad.
+6. **Subcontratación**: Si aplica, revisa las obligaciones de la empresa principal respecto a subcontratistas (Ley 20.123).
+7. **Seguridad y salud laboral**: Verifica referencias a la Ley 16.744 (accidentes del trabajo y enfermedades profesionales).
+8. **Acoso y discriminación**: Revisa cláusulas sobre protocolos de acoso sexual, laboral y no discriminación (Ley 21.643, Ley Karin).
+9. **Beneficios adicionales**: Seguros de salud complementarios, planes de previsión, vales de alimentación, etc.
+
+Enfócate en la protección del trabajador y el cumplimiento del Código del Trabajo chileno. Señala cualquier cláusula que pueda vulnerar derechos laborales irrenunciables.
+""",
+
+    "corporate": BASE_INSTRUCTION + """
+
+ESPECIALIZACIÓN: CONTRATO SOCIETARIO (CORPORATIVO)
+
+Este es un contrato de naturaleza societaria o corporativa (acuerdos entre accionistas, socios, juntas directivas, fusiones, etc.). Al analizarlo, presta especial atención a:
+
+1. **Estructura de gobierno corporativo**: Revisa la composición del directorio, quórums de votación, derechos de veto y mayorías calificadas.
+2. **Derechos de los accionistas/socios**: Analiza derechos a dividendos, preferencia de suscripción, información, retiro y liquidación.
+3. **Transferencia de acciones/participaciones**: Verifica cláusulas de derecho preferente, arrastre (drag-along), acompañamiento (tag-along), y valorización de las participaciones.
+4. **Aportes y capital**: Revisa las obligaciones de capitalización, aportes adicionales, y consecuencias del incumplimiento.
+5. **Disolución y liquidación**: Causales de disolución, procedimiento de liquidación y distribución del remanente.
+6. **Resolución de conflictos**: Arbitraje, mediación o tribunales ordinarios. Verifica la competencia y la ley aplicable.
+7. **Cláusulas de no competencia**: Especialmente relevantes en acuerdos entre socios fundadores y en joint ventures.
+8. **Protección de minorías**: Identifica mecanismos de protección para accionistas minoritarios (derecho a información, designación de directores, etc.).
+9. **Cumplimiento normativo**: Referencias a la Ley 18.046 (Sociedades Anónimas), Ley 20.382 (Gobierno Corporativo), CMF, y normas antilavado de dinero.
+10. **Responsabilidad de directores**: Analiza cláusulas de exención de responsabilidad, seguros D&O, y estándares de diligencia.
+
+Enfócate en la estructura de control, protección de derechos de los accionistas y cumplimiento de la normativa societaria chilena.
+""",
+}
+
 
 class LLMService:
     def __init__(self) -> None:
@@ -52,12 +112,22 @@ class LLMService:
         self.model = settings.LLM_MODEL
         self.client = httpx.AsyncClient(timeout=120.0)
 
-    async def analyze_contract(self, text: str) -> AnalysisResult:
+    def get_prompt(self, review_type: str = "commercial") -> str:
+        """Return the appropriate prompt template for the given contract type."""
+        prompt = PROMPT_TEMPLATES.get(review_type)
+        if not prompt:
+            logger.warning("Unknown review_type '%s', falling back to commercial", review_type)
+            prompt = PROMPT_TEMPLATES["commercial"]
+        return prompt
+
+    async def analyze_contract(self, text: str, review_type: str = "commercial") -> AnalysisResult:
         if not self.api_key:
             raise ValueError("No API key configured — set OPENAI_API_KEY or OPENROUTER_API_KEY")
 
+        system_prompt = self.get_prompt(review_type)
+
         messages = [
-            {"role": "system", "content": CHILEAN_LEGAL_PROMPT},
+            {"role": "system", "content": system_prompt},
             {"role": "user", "content": f"Analiza el siguiente contrato:\n\n{text}"},
         ]
 

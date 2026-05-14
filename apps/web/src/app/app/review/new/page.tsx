@@ -14,6 +14,7 @@ export default function NewReviewPage() {
   const [errorMsg, setErrorMsg] = useState("");
   const [progressMsg, setProgressMsg] = useState("");
   const [dragOver, setDragOver] = useState(false);
+  const [contractType, setContractType] = useState("commercial");
   const inputRef = useRef<HTMLInputElement>(null);
 
   const isPdf = fileName.toLowerCase().endsWith(".pdf") || fileName.toLowerCase().endsWith(".docx");
@@ -98,7 +99,7 @@ export default function NewReviewPage() {
         body: JSON.stringify({
           tenant_id: "tenant-demo",
           document_id: docId,
-          review_type: "commercial",
+          review_type: contractType,
           language: "es",
         }),
       });
@@ -207,6 +208,44 @@ export default function NewReviewPage() {
             Quitar archivo
           </button>
         )}
+      </div>
+
+      {/* Contract type selector */}
+      <div style={{ marginBottom: 16 }}>
+        <label style={{ fontSize: 14, fontWeight: 500, color: "var(--navy)", display: "block", marginBottom: 8 }}>
+          Tipo de contrato
+        </label>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          {[
+            { value: "commercial", label: "Comercial", desc: "Compraventa, servicios, distribución" },
+            { value: "laboral", label: "Laboral", desc: "Trabajo, honorarios, confidencialidad" },
+            { value: "corporate", label: "Societario", desc: "Accionistas, joint venture, fusiones" },
+          ].map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => setContractType(opt.value)}
+              style={{
+                flex: "1 1 0",
+                minWidth: 140,
+                padding: "10px 14px",
+                border: `2px solid ${contractType === opt.value ? "var(--gold)" : "var(--outline-variant)"}`,
+                borderRadius: 8,
+                background: contractType === opt.value ? "rgba(119,90,25,0.06)" : "var(--surface-card)",
+                cursor: "pointer",
+                textAlign: "left" as const,
+                transition: "all 0.15s",
+              }}
+            >
+              <div style={{ fontSize: 14, fontWeight: 600, color: contractType === opt.value ? "var(--gold)" : "var(--navy)", marginBottom: 2 }}>
+                {opt.label}
+              </div>
+              <div style={{ fontSize: 11, color: "var(--navy-muted)", lineHeight: 1.3 }}>
+                {opt.desc}
+              </div>
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Text area (for .txt or paste) */}
