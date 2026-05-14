@@ -19,6 +19,34 @@ def auth_headers(token: str) -> dict:
 
 
 @pytest.mark.asyncio
+async def test_register_auto_tenant():
+    """Register without tenant_id creates a new isolated tenant."""
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        resp = await client.post(
+            "/auth/register",
+            json={
+                "email": "autotenant@test.cl",
+                "password": "secure123",
+                "name": "Auto Tenant User",
+                # no tenant_id — should auto-create
+            },
+        )
+        assert resp.status_code == 201
+        data = resp.json()
+        assert "access_token" in data
+
+        # Verify /me returns the auto-created tenant name
+        token = data["access_token"]
+        me_resp = await client.get("/auth/me", headers=auth_headers(token))
+        assert me_resp.status_code == 200
+        me = me_resp.json()
+        assert me["tenant_name"] == "Usuario Auto Tenant User"
+        assert me["tenant_id"] != "tenant-demo"
+        assert len(me["tenant_id"]) == 32
+
+
+@pytest.mark.asyncio
 async def test_register_success():
     """Register a new user returns 201 + token."""
     transport = ASGITransport(app=app)

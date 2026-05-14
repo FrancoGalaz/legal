@@ -39,19 +39,37 @@ async def register(
             detail="Ya existe una cuenta con este correo electrónico",
         )
 
+    # Auto-create tenant if not provided (isolated per-user tenant)
+    tenant_id = req.tenant_id
+    if not tenant_id:
+        from app.models.tenant import Tenant
+        tenant_id = str(uuid.uuid4())[:32]
+        tenant = Tenant(
+            id=tenant_id,
+            name=f"Usuario {req.name}",
+            slug=f"user-{uuid.uuid4().hex[:12]}",
+            owner_id=None,  # set after user creation
+        )
+        session.add(tenant)
+
     user = User(
         id=str(uuid.uuid4())[:32],
         email=req.email,
         name=req.name,
         hashed_password=hash_password(req.password),
-        tenant_id=req.tenant_id,
+        tenant_id=tenant_id,
     )
     session.add(user)
+
+    # Link tenant owner if we just created the tenant
+    if not req.tenant_id:
+        tenant.owner_id = user.id
+
     await session.commit()
     await session.refresh(user)
 
     token = create_access_token(user.id, user.tenant_id)
-    logger.info("New user registered: %s (%s)", user.email, user.id)
+    logger.info("New user registered: %s (%s) tenant=%s", user.email, user.id, user.tenant_id)
     return TokenResponse(access_token=token)
 
 

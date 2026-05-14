@@ -7,7 +7,7 @@ class RegisterRequest(BaseModel):
     email: str = Field(..., description="Correo electrónico")
     password: str = Field(..., min_length=6, description="Contraseña (mín. 6 caracteres)")
     name: str = Field(..., description="Nombre completo")
-    tenant_id: str = Field(default="tenant-demo", description="ID del tenant")
+    tenant_id: str | None = Field(default=None, description="ID del tenant. Si no se provee, se crea uno automático.")
 
 
 class LoginRequest(BaseModel):
