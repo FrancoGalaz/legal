@@ -16,7 +16,7 @@ dependencies = [
     "python-multipart>=0.0.9,<1",
     "python-jose[cryptography]>=3.3,<4",
     "passlib[bcrypt]>=1.7,<2",
-    "bcrypt>=4.0,<5",
+    "bcrypt>=4.0,<4.1",  # v5 breaks passlib; v4.1+ may also
 ]
 
 [project.optional-dependencies]
