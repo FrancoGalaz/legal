@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 const NAV_SECTIONS = [
   {
@@ -91,6 +92,7 @@ function AppLayoutInner({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { user, loading, logout } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   // If on login page, don't show the sidebar
   if (pathname === "/app/login") {
@@ -140,8 +142,16 @@ function AppLayoutInner({ children }: { children: React.ReactNode }) {
 
   return (
     <div style={{ display: "flex", minHeight: "100vh", background: "var(--surface)" }}>
+      {/* ─── Sidebar Overlay (mobile) ─── */}
+      <div
+        className={`app-sidebar-overlay ${mobileOpen ? "open" : ""}`}
+        onClick={() => setMobileOpen(false)}
+        style={{ display: "none" }}
+      />
+
       {/* ─── Sidebar ─── */}
       <aside
+        className={`app-sidebar ${mobileOpen ? "open" : ""}`}
         style={{
           width: collapsed ? 64 : 240,
           background: "var(--navy)",
@@ -227,6 +237,7 @@ function AppLayoutInner({ children }: { children: React.ReactNode }) {
                     <Link
                       key={item.href}
                       href={item.href}
+                      onClick={() => setMobileOpen(false)}
                       style={{
                         display: "flex",
                         alignItems: "center",
@@ -308,9 +319,10 @@ function AppLayoutInner({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* ─── Main Content ─── */}
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
+      <div className="app-main-content" style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
         {/* Top bar */}
         <header
+          className="app-topbar"
           style={{
             height: 56,
             background: "var(--surface-card)",
@@ -334,7 +346,7 @@ function AppLayoutInner({ children }: { children: React.ReactNode }) {
                 padding: 4,
               }}
               className="mobile-menu-btn"
-              onClick={() => setCollapsed(!collapsed)}
+              onClick={() => setMobileOpen(!mobileOpen)}
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <line x1="3" y1="6" x2="21" y2="6" />
@@ -433,7 +445,9 @@ function AppLayoutInner({ children }: { children: React.ReactNode }) {
         </header>
 
         {/* Page content */}
-        <main style={{ flex: 1, padding: 32, overflow: "auto" }}>{children}</main>
+        <main style={{ flex: 1, padding: 32, overflow: "auto" }}>
+          <ErrorBoundary>{children}</ErrorBoundary>
+        </main>
       </div>
     </div>
   );

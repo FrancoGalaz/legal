@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
+import { DashboardSkeleton } from "@/components/LoadingSkeleton";
 
 interface Review {
   id: string;
@@ -113,6 +114,10 @@ export default function DashboardPage() {
     ? Math.max(...stats.weekly_trend.map((w) => w.count), 1)
     : 1;
 
+  if (loading) {
+    return <DashboardSkeleton />;
+  }
+
   return (
     <div>
       {/* ─── Welcome + Quick Actions ─── */}
@@ -198,6 +203,7 @@ export default function DashboardPage() {
 
       {/* ─── Stats Grid ─── */}
       <div
+        className="dash-stats-grid"
         style={{
           display: "grid",
           gridTemplateColumns: "repeat(4, 1fr)",
@@ -355,7 +361,7 @@ export default function DashboardPage() {
       )}
 
       {/* ─── Charts Row ─── */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, marginBottom: 28 }}>
+      <div className="dash-charts-row" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, marginBottom: 28 }}>
         {/* Risk Distribution */}
         <div
           style={{
@@ -368,8 +374,8 @@ export default function DashboardPage() {
           <span style={{ fontWeight: 600, fontSize: 14, color: "var(--navy)", display: "block", marginBottom: 16 }}>
             Riesgo
           </span>
-          {loading || !stats ? (
-            <div style={{ color: "var(--navy-muted)", fontSize: 13 }}>Cargando...</div>
+          {!stats ? (
+            <div style={{ color: "var(--navy-muted)", fontSize: 13 }}>Sin datos disponibles</div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {[
@@ -407,8 +413,8 @@ export default function DashboardPage() {
           <span style={{ fontWeight: 600, fontSize: 14, color: "var(--navy)", display: "block", marginBottom: 16 }}>
             Tipo de Revisión
           </span>
-          {loading || !stats ? (
-            <div style={{ color: "var(--navy-muted)", fontSize: 13 }}>Cargando...</div>
+          {!stats ? (
+            <div style={{ color: "var(--navy-muted)", fontSize: 13 }}>Sin datos disponibles</div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {Object.entries(stats.type_distribution).map(([key, count]) => {
@@ -445,8 +451,8 @@ export default function DashboardPage() {
           <span style={{ fontWeight: 600, fontSize: 14, color: "var(--navy)", display: "block", marginBottom: 16 }}>
             Tendencia Semanal
           </span>
-          {loading || !stats ? (
-            <div style={{ color: "var(--navy-muted)", fontSize: 13 }}>Cargando...</div>
+          {!stats ? (
+            <div style={{ color: "var(--navy-muted)", fontSize: 13 }}>Sin datos disponibles</div>
           ) : (
             <div style={{ display: "flex", alignItems: "flex-end", gap: 4, height: 80, paddingTop: 8 }}>
               {stats.weekly_trend.map((w, i) => {
@@ -479,7 +485,7 @@ export default function DashboardPage() {
       </div>
 
       {/* ─── Two-column layout ─── */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
+      <div className="dash-two-col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
         {/* Recent Activity */}
         <div
           style={{
@@ -506,13 +512,7 @@ export default function DashboardPage() {
             </Link>
           </div>
 
-          {loading && (
-            <div style={{ padding: 32, textAlign: "center", color: "var(--navy-muted)", fontSize: 13 }}>
-              Cargando...
-            </div>
-          )}
-
-          {!loading && recentReviews.length === 0 && (
+          {recentReviews.length === 0 && (
             <div style={{ padding: 32, textAlign: "center" }}>
               <p style={{ color: "var(--navy-muted)", fontSize: 13, margin: "0 0 12px" }}>
                 Aún no hay actividad
@@ -621,13 +621,7 @@ export default function DashboardPage() {
             Último Análisis
           </div>
 
-          {loading && (
-            <div style={{ padding: 32, textAlign: "center", color: "var(--navy-muted)", fontSize: 13 }}>
-              Cargando...
-            </div>
-          )}
-
-          {!loading && !latestReview && (
+          {!latestReview && (
             <div style={{ padding: 32, textAlign: "center" }}>
               <p style={{ color: "var(--navy-muted)", fontSize: 13, margin: 0 }}>
                 No hay análisis aún.
@@ -635,7 +629,7 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {!loading && latestReview && (
+          {latestReview && (
             <div style={{ padding: 20 }}>
               {latestReview.document_filename && (
                 <p style={{ fontSize: 12, color: "var(--navy-muted)", margin: "0 0 10px" }}>

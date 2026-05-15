@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
+import { ListPageSkeleton } from "@/components/LoadingSkeleton";
 
 interface Review {
   id: string;
@@ -176,7 +177,11 @@ export default function HistoryPage() {
       </div>
 
       {/* ─── Error States ─── */}
-      {needsAuth && (
+      {loading && (
+        <ListPageSkeleton title="Historial" />
+      )}
+
+      {!loading && needsAuth && (
         <div
           style={{
             background: "rgba(217,119,6,0.1)",
