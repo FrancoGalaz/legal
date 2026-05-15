@@ -31,6 +31,7 @@ GitHub Pages: https://francogalaz.github.io/legal (NEXT_OUTPUT=export, base path
 - **SEO y polish**: favicon SVG, robots.txt, meta tags Open Graph y Twitter Cards. Build export corregido en script build:web.
 - **FAQ section agregada**: accordion con 7 preguntas sobre revision de contratos en Chile (tipos, precision, leyes, seguridad, pricing, multi-tenant). Estilos consistentes con el design system.
 - **Metricas fijadas en build estatico**: animated counters mostraban "0" en GitHub Pages (sin scroll trigger); ahora muestran valor final cuando la animacion no esta activa.
+- **Nota: GitHub Pages sirve README.md en /legal/ root**: la URL raiz muestra el README.md en vez del landing. El contenido real esta en /legal/index.html y funciona correctamente. La configuracion de Pages probablemente esta en modo "branch" y no "GitHub Actions" — verificar en Settings > Pages > Source.
 
 ## Roadmap (orden de prioridad)
 
