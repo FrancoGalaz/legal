@@ -12,7 +12,7 @@ GitHub Pages: https://francogalaz.github.io/legal (NEXT_OUTPUT=export, base path
 - **No romper el build**: `pnpm build` y `pytest` deben pasar antes de commitear.
 - **Design system**: usar tokens de DESIGN.md, no hex literals.
 
-## Current State (2026-05-14)
+## Current State (2026-05-15)
 - **Fase 1 COMPLETA**: Landing page premium con responsive, waitlist form, CI/CD deploy-pages.yml funcional.
 - **GitHub Pages LIVE**: https://francogalaz.github.io/legal/ — HTTP 200, incluye waitlist.
 - **Fase 2 (App Funcional) COMPLETA**: dashboard, contracts, history, review/new, review/[id] pages.
