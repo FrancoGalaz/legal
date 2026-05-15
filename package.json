@@ -10,7 +10,7 @@
   "scripts": {
     "dev:web": "cd apps/web && pnpm dev",
     "dev:api": "cd services/api && uvicorn app.main:app --reload --port 8000",
-    "build:web": "cd apps/web && pnpm build",
+    "build:web": "cd apps/web && NEXT_OUTPUT=export NEXT_BASE_PATH=/legal pnpm build",
     "lint": "echo 'no linters configured yet'",
     "typecheck": "echo 'no typecheck configured yet'"
   },

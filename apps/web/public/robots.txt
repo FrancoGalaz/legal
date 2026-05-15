@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://francogalaz.github.io/legal/sitemap.xml

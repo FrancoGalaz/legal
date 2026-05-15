@@ -209,7 +209,7 @@ export default function ReviewPage() {
     return () => {
       cancelled = true;
     };
-  }, [reviewId]);
+  }, [reviewId, user, authHeaders]);
 
   if (needsAuth) {
     return (

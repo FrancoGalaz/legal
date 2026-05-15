@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <!-- Background shield shape -->
+  <rect width="32" height="32" rx="6" fill="#041627"/>
+  <!-- Chevron / briefcase / legal icon -->
+  <path d="M16 6L6 12v4c0 5.5 4.5 10.5 10 12 5.5-1.5 10-6.5 10-12v-4L16 6z" fill="#775A19" opacity="0.85"/>
+  <path d="M16 8L8 13v3.5c0 4.5 3.5 8.5 8 10 4.5-1.5 8-5.5 8-10V13l-8-5z" fill="#FED488" opacity="0.9"/>
+  <!-- Scale icon -->
+  <path d="M11 15h10l-5 8-5-8z" fill="#041627" opacity="0.6"/>
+  <rect x="15" y="16" width="2" height="5" rx="0.5" fill="#041627"/>
+</svg>
