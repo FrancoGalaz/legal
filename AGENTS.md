@@ -27,14 +27,14 @@ GitHub Pages: https://francogalaz.github.io/legal (NEXT_OUTPUT=export, base path
 - **JWT_SECRET_KEY generado**: clave segura configurada en .env (reemplazo del default "change-me-in-production").
 - **.env.example actualizado**: incluye documentacion completa de JWT, Flow.cl, CORS, DB y LLM.
 - **Todo el roadmap (items 1-13) esta COMPLETO**: landing, app funcional, auth, AI core, pricing, Flow.cl, multi-tenant.
-- **60 tests automatizados**: auth (10), pricing (6), documents (2), health (1), reviews (5), review flow (6), LLM service (13), tenants (12), waitlist (5).
+- **93 tests automatizados**: auth (10), pricing (6), documents (2), health (1), reviews (5), review flow (6), LLM service (13), tenants (12), waitlist (5), pdf_extractor (15), flow_service (18). Cobertura 71%.
 - **Loading Skeleton**: componente `LoadingSkeleton` con shimmer animation para dashboard, listas, stats y cards — reemplaza "Cargando..." en dashboard, history.
 - **ErrorBoundary**: componente React que atrapa errores de renderizado y muestra UI de fallback sin romper la app completa. Envuelve cada página en el layout protegido.
 - **Sidebar responsive**: en mobile (<768px), el sidebar se transforma en overlay fijo con botón hamburguesa. Se cierra automáticamente al navegar o tocar el backdrop. Layout de dashboard adaptable (stats 2-col, charts 1-col en tablets, 1-col en mobile).
 - **SEO y polish**: favicon SVG, robots.txt, meta tags Open Graph y Twitter Cards. Build export corregido en script build:web.
 - **FAQ section agregada**: accordion con 7 preguntas sobre revision de contratos en Chile (tipos, precision, leyes, seguridad, pricing, multi-tenant). Estilos consistentes con el design system.
 - **Metricas fijadas en build estatico**: animated counters mostraban "0" en GitHub Pages (sin scroll trigger); ahora muestran valor final cuando la animacion no esta activa.
-- **Nota: GitHub Pages sirve README.md en /legal/ root**: la URL raiz muestra el README.md en vez del landing. El contenido real esta en /legal/index.html y funciona correctamente. La configuracion de Pages probablemente esta en modo "branch" y no "GitHub Actions" — verificar en Settings > Pages > Source.
+- **GitHub Pages sirve correctamente**: https://francogalaz.github.io/legal/ — HTTP 200, muestra el landing page (Next.js export).
 
 ## Roadmap (orden de prioridad)
 
