@@ -27,6 +27,7 @@ GitHub Pages: https://francogalaz.github.io/legal (NEXT_OUTPUT=export, base path
 - **.env.example actualizado**: incluye documentacion completa de JWT, Flow.cl, CORS, DB y LLM.
 - **Todo el roadmap (items 1-13) esta COMPLETO**: landing, app funcional, auth, AI core, pricing, Flow.cl, multi-tenant.
 - **55 tests automatizados**: auth (register/auto-tenant/login/me, 12), pricing (6), documents (2), health (1), reviews (8), review flow (6), LLM service (9), tenants (12).
+- **SEO y polish**: favicon SVG, robots.txt, meta tags Open Graph y Twitter Cards. Build export corregido en script build:web.
 
 ## Roadmap (orden de prioridad)
 
@@ -62,8 +63,7 @@ GitHub Pages: https://francogalaz.github.io/legal (NEXT_OUTPUT=export, base path
 # Frontend
 cd /home/pcagente/Documentos/Legal/legal-agent-cl
 pnpm install
-pnpm build:web        # build estático a apps/web/out
-cd apps/web && /home/pcagente/.npm-global/bin/pnpm build  # workaround si npm está roto
+pnpm build:web        # build estático a apps/web/out (NEXT_OUTPUT=export + NEXT_BASE_PATH=/legal)
 
 # Backend
 cd services/api
