@@ -1,7 +1,6 @@
 """Tests for Flow.cl payment gateway integration — hash logic, webhook verify, error cases."""
 
 from dataclasses import asdict
-from unittest.mock import AsyncMock, patch
 
 import pytest
 
