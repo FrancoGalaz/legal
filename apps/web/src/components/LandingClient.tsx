@@ -107,10 +107,10 @@ function AnimatedNumber({
     2200,
     active
   );
-  // On server/initial render, show the end value directly
+  // On server/initial render or when not active, show final value instead of 0
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
-  const display = mounted ? count : value;
+  const display = mounted && active ? count : value;
   if (decimals) return <span>{(display / Math.pow(10, decimals)).toFixed(decimals)}</span>;
   return <span>{display.toLocaleString('es-CL')}</span>;
 }
@@ -779,6 +779,98 @@ function WaitlistForm() {
   );
 }
 
+/* ─── FAQ Accordion ─── */
+
+function FAQSection() {
+  const [openIdx, setOpenIdx] = useState<number | null>(0);
+  const faqs = [
+    {
+      q: '¿Qué tipos de contratos puede revisar Legal Agent CL?',
+      a: 'Soportamos contratos comerciales (arriendos, prestación de servicios, compraventas, confidencialidad), contratos de trabajo y contratos corporativos. El sistema reconoce el tipo de contrato y ajusta el análisis al marco legal chileno aplicable a cada uno.',
+    },
+    {
+      q: '¿Qué tan precisas son las revisiones con IA?',
+      a: 'Nuestro agente alcanza un 94% de precisión en la detección de cláusulas de alto riesgo. Sin embargo, recomendamos siempre la revisión final de un abogado. La IA es un potente primer filtro que reduce hasta un 70% el tiempo de revisión inicial, no un reemplazo del criterio legal.',
+    },
+    {
+      q: '¿Qué leyes chilenas considera el análisis?',
+      a: 'El sistema está entrenado con el Código Civil, Código del Trabajo, Ley 19.496 (Protección al Consumidor), Ley 21.561 (Jornada Laboral), Ley 20.123 (Subcontratación), Ley 21.643 (Ley Karin — acoso laboral), Ley 18.046 (Sociedades Anónimas) y jurisprudencia relevante de nuestros tribunales.',
+    },
+    {
+      q: '¿Mis datos y contratos están seguros?',
+      a: 'Absolutamente. Tus documentos se almacenan en servidores con cifrado en tránsito (TLS 1.3) y en reposo (AES-256). Nunca utilizamos tu contenido para entrenar modelos de IA. Cada tenant tiene aislamiento completo de datos — lo que sube tu firma solo lo ve tu firma.',
+    },
+    {
+      q: '¿Necesito conocimientos técnicos para usarlo?',
+      a: 'No. La plataforma funciona como un servicio web: registra tu cuenta, sube tu contrato en PDF o Word, y en segundos recibes un análisis detallado con hallazgos, nivel de riesgo y recomendaciones de redacción. No requiere instalación ni configuración técnica.',
+    },
+    {
+      q: '¿Cuánto cuesta y qué incluye cada plan?',
+      a: 'Ofrecemos un plan gratuito con 3 revisiones al mes para que pruebes el servicio sin compromiso. El plan Pro ($29.990 CLP/mes) incluye revisiones ilimitadas, análisis multi-tipo, exportación de reportes y prioridad en el procesamiento. Pago vía Webpay con Flow.cl.',
+    },
+    {
+      q: '¿Puede mi estudio jurídico completo usar la plataforma?',
+      a: 'Sí. El plan multi-tenant permite que un estudio jurídico cree una organización con múltiples abogados bajo una misma suscripción. Cada miembro accede a los mismos contratos y reportes del estudio, con roles y permisos diferenciados.',
+    },
+  ];
+
+  return (
+    <section className="faq-section" id="faq">
+      <div className="container">
+        <ScrollReveal>
+          <h2 className="sec-title">Preguntas Frecuentes</h2>
+        </ScrollReveal>
+        <ScrollReveal delay={80}>
+          <p className="sec-sub">
+            Todo lo que necesitas saber sobre la revisión de contratos con IA en Chile.
+          </p>
+        </ScrollReveal>
+        <div className="faq-list">
+          {faqs.map((faq, i) => {
+            const isOpen = openIdx === i;
+            return (
+              <ScrollReveal key={i} delay={i * 60}>
+                <div className={`faq-item ${isOpen ? 'open' : ''}`}>
+                  <button
+                    className="faq-question"
+                    onClick={() => setOpenIdx(isOpen ? null : i)}
+                    aria-expanded={isOpen}
+                  >
+                    <span className="faq-q-text">{faq.q}</span>
+                    <svg
+                      className="faq-chevron"
+                      viewBox="0 0 20 20"
+                      width="20"
+                      height="20"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    >
+                      <path d="M6 8l4 4 4-4" />
+                    </svg>
+                  </button>
+                  <div
+                    className="faq-answer"
+                    style={{
+                      maxHeight: isOpen ? '300px' : '0',
+                      opacity: isOpen ? 1 : 0,
+                      overflow: 'hidden',
+                      transition: 'max-height 0.35s cubic-bezier(0.16,1,0.3,1), opacity 0.25s',
+                    }}
+                  >
+                    <p className="faq-a-text">{faq.a}</p>
+                  </div>
+                </div>
+              </ScrollReveal>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 /* ─── CTA Final ─── */
 
 function CTAFinalSection() {
@@ -876,6 +968,7 @@ export default function LandingPage() {
         <ProductDemoSection />
         <APISection />
         <TestimonialsSection />
+        <FAQSection />
         <CTAFinalSection />
       </main>
       <FooterSection />
