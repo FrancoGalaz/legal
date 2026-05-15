@@ -187,6 +187,10 @@ export default function ReviewPage() {
             `${BASE}/reviews/${reviewId}`,
             { headers: authHeaders() }
           );
+          if (res.status === 401) {
+            if (!cancelled) setNeedsAuth(true);
+            return;
+          }
           if (!res.ok) throw new Error("Review not found");
           const data: Review = await res.json();
           if (!cancelled) {
