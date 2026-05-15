@@ -27,8 +27,10 @@ GitHub Pages: https://francogalaz.github.io/legal (NEXT_OUTPUT=export, base path
 - **JWT_SECRET_KEY generado**: clave segura configurada en .env (reemplazo del default "change-me-in-production").
 - **.env.example actualizado**: incluye documentacion completa de JWT, Flow.cl, CORS, DB y LLM.
 - **Todo el roadmap (items 1-13) esta COMPLETO**: landing, app funcional, auth, AI core, pricing, Flow.cl, multi-tenant.
-- **60 tests automatizados**: auth (12), pricing (6), documents (2), health (1), reviews (8), review flow (6), LLM service (9), tenants (12), waitlist (5).
+- **61 tests automatizados**: auth (12), pricing (6), documents (2), health (1), reviews (8), review flow (6), LLM service (9), tenants (12), waitlist (5).
 - **SEO y polish**: favicon SVG, robots.txt, meta tags Open Graph y Twitter Cards. Build export corregido en script build:web.
+- **FAQ section agregada**: accordion con 7 preguntas sobre revision de contratos en Chile (tipos, precision, leyes, seguridad, pricing, multi-tenant). Estilos consistentes con el design system.
+- **Metricas fijadas en build estatico**: animated counters mostraban "0" en GitHub Pages (sin scroll trigger); ahora muestran valor final cuando la animacion no esta activa.
 
 ## Roadmap (orden de prioridad)
 
