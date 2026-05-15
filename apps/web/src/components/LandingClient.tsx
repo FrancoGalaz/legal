@@ -713,7 +713,8 @@ function WaitlistForm() {
     setStatus('submitting');
     setErrorMsg('');
     try {
-      const res = await fetch('/api/waitlist', {
+      const BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const res = await fetch(`${BASE}/waitlist`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: name.trim(), email: email.trim() }),

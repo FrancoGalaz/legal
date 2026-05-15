@@ -19,14 +19,15 @@ GitHub Pages: https://francogalaz.github.io/legal (NEXT_OUTPUT=export, base path
 - **Fase 3 (AI Core) COMPLETA**: LLMService con OpenRouter, prompts de derecho chileno específicos por tipo, dashboard con métricas avanzadas (distribución riesgo, tipo, tendencia semanal), historial con filtros y búsqueda por nombre de archivo.
 - **Auth implementada (JWT)**: login/registro en frontend + backend con JWT, User model en DB, proteccion de rutas cliente-side.
 - **Aislamiento multi-tenant**: cada usuario registrado obtiene un tenant único automáticamente — no más tenant compartido "tenant-demo". El onboarding multi-tenant también crea tenants aislados.
-- **Backend FastAPI**: endpoints /auth/register, /auth/login, /auth/me, /documents, /reviews, /reviews/stats, /documents/upload, /health, /pricing/plans, /pricing/my-plan, /pricing/upgrade con SQLAlchemy async y JOIN optimizado.
+- **Backend FastAPI**: endpoints /auth/register, /auth/login, /auth/me, /documents, /reviews, /reviews/stats, /documents/upload, /health, /pricing/plans, /pricing/my-plan, /pricing/upgrade, /waitlist, /tenants/* con SQLAlchemy async y JOIN optimizado.
+- **Waitlist endpoint**: POST /waitlist — endpoint público para registrar emails en la landing page. Usa NEXT_PUBLIC_API_URL en el frontend.
 - **API URL**: todas las paginas usan `NEXT_PUBLIC_API_URL` en vez de URLs hardcodeadas.
 - **Error handling visible**: todas las páginas tienen estados needsAuth, error, loading. Sin valores hardcodeados "tenant-demo" — se reemplazaron por guards con redirect a login.
 - **Pricing Tiers implementado**: modelo plan en User (free/pro), limites de uso (free: 3 revisiones/mes), enforce en POST /reviews, pagina /app/pricing con planes y upgrade.
 - **JWT_SECRET_KEY generado**: clave segura configurada en .env (reemplazo del default "change-me-in-production").
 - **.env.example actualizado**: incluye documentacion completa de JWT, Flow.cl, CORS, DB y LLM.
 - **Todo el roadmap (items 1-13) esta COMPLETO**: landing, app funcional, auth, AI core, pricing, Flow.cl, multi-tenant.
-- **55 tests automatizados**: auth (register/auto-tenant/login/me, 12), pricing (6), documents (2), health (1), reviews (8), review flow (6), LLM service (9), tenants (12).
+- **60 tests automatizados**: auth (12), pricing (6), documents (2), health (1), reviews (8), review flow (6), LLM service (9), tenants (12), waitlist (5).
 - **SEO y polish**: favicon SVG, robots.txt, meta tags Open Graph y Twitter Cards. Build export corregido en script build:web.
 
 ## Roadmap (orden de prioridad)
